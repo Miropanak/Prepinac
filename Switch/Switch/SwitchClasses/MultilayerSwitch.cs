@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using PacketDotNet.Ieee80211;
 using SharpPcap.Npcap;
 
 
@@ -76,11 +77,20 @@ namespace Switch.SwitchClasses
 
         public void CheckMACinTable(String mac, int port)
         {
-            
+            CamTableRecord record = camTable.Find(rec => rec.mac_addr.Equals(mac));
 
-
-            
-            camTable.Add(new CamTableRecord(mac, port, defTimeStamp));
+            if (record != null)
+            {
+                if(record.port_num != port)
+                {
+                    record.port_num = port;
+                }
+                record.time_stamp = 30;
+            }
+            else
+            {
+                camTable.Add(new CamTableRecord(mac, port, defTimeStamp));
+            }
 
             if (gui.richTextBox2.InvokeRequired)
                 gui.BeginInvoke(new MethodInvoker(() => gui.PrintCamTable()));
