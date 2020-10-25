@@ -53,7 +53,7 @@ namespace Switch.SwitchClasses
 
             String mac = "";
 
-            //counter
+            //Statistics Port IN
             if (packet is EthernetPacket)
             {
                 eth_in++;
@@ -85,20 +85,18 @@ namespace Switch.SwitchClasses
                 }
             }
 
-            
-            multi_switch.CheckMACinTable(mac, port);
+            String mac_addr = String.Format("{0}{1}:{2}{3}:{4}{5}:{6}{7}:{8}{9}:{10}{11}", mac[0], mac[1], mac[2], mac[3], mac[4], mac[5], mac[6], mac[7], mac[8], mac[9], mac[10], mac[11]);
 
-
-
-            //skontrolujem 
-            multi_switch.UpdateStats();
+            multi_switch.CheckMACinTable(mac_addr, port);
 
             
           
             //preposlatie na druhy port v pripade ze sa tam nachadza zariadenie.
-            //forward_device.SendPacket(packet);
+            /*if(myself.Equals(MultilayerSwitch.portInterfaces[1]))
+                forward_device.SendPacket(packet);
             //multi_switch.ForwardPacket(this, packet);
 
+            //Statistics Port OUT
             /*try
             {
                 //MultilayerSwitch.device[1].SendPacket(packet);

@@ -22,11 +22,5 @@ namespace Switch.SwitchClasses
         public string Mac_addr { get; set; }
         public int Port_num { get; set; }
         public int Time_stamp { get; set; }
-
-        //vrati naformatovanu mac s :::
-        String Fomat_mac()
-        {
-            return "";
-        }
     }
 }

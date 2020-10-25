@@ -12,11 +12,12 @@ namespace Switch.SwitchClasses
     public class MultilayerSwitch
     {
         //device[0] Ethernet 4, device[1] Ethernet 3
-        public static NpcapDevice[] device = new NpcapDevice[2];
-        public static CamTableRecord[] camTable = new CamTableRecord[100]; //vs public List<camTableRecord> camTable;
-        public static PortInterface[] portInterfaces = new PortInterface[2];
-        public static Form1 gui;
-        public int Timer = 30;
+        public NpcapDevice[] device = new NpcapDevice[2];
+        //public CamTableRecord[] camTable = new CamTableRecord[10]; //vs public List<camTableRecord> camTable;
+        public List<CamTableRecord> camTable = new List<CamTableRecord>();
+        public PortInterface[] portInterfaces = new PortInterface[2];
+        public Form1 gui;
+        public int defTimeStamp = 30;
         
         //
         public MultilayerSwitch(Form1 f1)
@@ -56,33 +57,35 @@ namespace Switch.SwitchClasses
             //
         }
 
-        //vypisanie zaznamov z cam tabulky
-        public void PrintTable(Form1 f)
+        //aktualizovanie cam tabulky, najde zaznam podla mac a aktualizuje port
+        public void UpdateTable(String mac, int port) 
         {
 
         }
-
-        //aktualizovanie cam tabulky
-        public void UpdateTable(String mac, int port) { }
         
         public void UpdateStats()
         {
             //gui.richTextBox1.BeginInvoke(new MethodInvoker(() => gui.richTextBox1.AppendText("Abrakadabra")));
-            if (gui.richTextBox1.InvokeRequired)
+            /*if (gui.richTextBox1.InvokeRequired)
                 gui.BeginInvoke(new MethodInvoker(() => gui.PrintStats()));
             else
-                gui.PrintStats();
+                gui.PrintStats();*/
         }
 
-        public int ConfTimer { get { return Timer; } set { Timer = value;} }
+        public int ConfTimer { get { return defTimeStamp; } set { defTimeStamp = value;} }
 
         public void CheckMACinTable(String mac, int port)
         {
-            gui.richTextBox2.BeginInvoke(new MethodInvoker(() => gui.richTextBox2.AppendText(String.Format("MAC {0} port {1}\n", mac, port))));
-            /*if (gui.richTextBox1.InvokeRequired)
+            
+
+
+            
+            camTable.Add(new CamTableRecord(mac, port, defTimeStamp));
+
+            if (gui.richTextBox2.InvokeRequired)
                 gui.BeginInvoke(new MethodInvoker(() => gui.PrintCamTable()));
             else
-                gui.PrintCamTable();*/
+                gui.PrintCamTable();
         }
     }
 }

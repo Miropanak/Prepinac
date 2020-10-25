@@ -22,6 +22,7 @@ namespace Switch
     {
         private CaptureDeviceList allDevices;
         public MultilayerSwitch multi_switch;
+        private Thread thread;
 
         public Form1()
         {
@@ -44,15 +45,19 @@ namespace Switch
 
             //priradenie zariadeni na ktorych sa bude pocuvat
             //Ethernet 4 MAC fe80::bd32:e328:48b3:ee5f%29
-            MultilayerSwitch.device[0] = (NpcapDevice)allDevices[checkedListBox_foundDevices.CheckedIndices[0]];
+            multi_switch.device[0] = (NpcapDevice)allDevices[checkedListBox_foundDevices.CheckedIndices[0]];
             //Ethernet 3 MAC fe80::7d9c:2f68:b092:7993%15
-            MultilayerSwitch.device[1] = (NpcapDevice)allDevices[checkedListBox_foundDevices.CheckedIndices[1]];
+            multi_switch.device[1] = (NpcapDevice)allDevices[checkedListBox_foundDevices.CheckedIndices[1]];
 
             //vytvorenie instancii portov a priradenie do Multiswitchu
-            MultilayerSwitch.portInterfaces[0] = new PortInterface(MultilayerSwitch.device[0], MultilayerSwitch.device[1], multi_switch, this, 0);
-            MultilayerSwitch.portInterfaces[1] = new PortInterface(MultilayerSwitch.device[1], MultilayerSwitch.device[0], multi_switch, this, 1);
+            multi_switch.portInterfaces[0] = new PortInterface(multi_switch.device[0], multi_switch.device[1], multi_switch, this, 0);
+            multi_switch.portInterfaces[1] = new PortInterface(multi_switch.device[1], multi_switch.device[0], multi_switch, this, 1);
 
             multi_switch.StartCapture();
+
+            //tread fo update statistics and CAM table
+            //thread = new Thread(updateThread);
+            //thread.Start();
         }
 
         //Find devices button
@@ -73,6 +78,7 @@ namespace Switch
             {
                 checkedListBox_foundDevices.Items.Add(String.Format("Device number: {0} {1}", i, dev.Description), false);
                 //richTextBox1.AppendText((String.Format("Device number: {0}\n{1} ", i, dev.ToString())));
+                i++;
             }
         }
 
@@ -110,21 +116,24 @@ namespace Switch
         //vypissanie CAM tabulky
         public void PrintCamTable()
         {
-            richTextBox2.Clear();
-            richTextBox2.AppendText(String.Format("          MAC address          | Port | Timer \n"));
-            try
+            if (richTextBox2.InvokeRequired)
             {
-                foreach (CamTableRecord record in MultilayerSwitch.camTable)
+                richTextBox2.BeginInvoke(new MethodInvoker(() => richTextBox2.Clear()));
+                richTextBox2.BeginInvoke(new MethodInvoker(() => richTextBox2.AppendText(String.Format("MAC address\tPort\tTimer\n"))));
+                foreach (CamTableRecord record in multi_switch.camTable)
                 {
-                    richTextBox2.AppendText(String.Format("{0} |  {1}  |  {2}\n", record.mac_addr, record.port_num, record.time_stamp));
+                    richTextBox2.BeginInvoke(new MethodInvoker(() => richTextBox2.AppendText(String.Format("{0}\t{1}\t{2}\n", record.mac_addr, record.port_num, record.time_stamp))));
                 }
             }
-            catch (Exception except)
+            else
             {
-                MessageBox.Show("CAM tabulka je zatial prazdna!", "Confirm");
+                richTextBox2.Clear();
+                richTextBox2.AppendText(String.Format("MAC address\tPort\tTimer\n"));
+                foreach (CamTableRecord record in multi_switch.camTable)
+                {
+                    richTextBox2.AppendText(String.Format("{0}\t{1}\t{2}\n", record.mac_addr, record.port_num, record.time_stamp));
+                }
             }
-
-
         }
 
         //vypisanie statistik, to by bolo v pripade ze sa to vola z inej triedy
@@ -138,7 +147,7 @@ namespace Switch
         {
             int i = 0;
             richTextBox1.Clear();
-            foreach (PortInterface port in MultilayerSwitch.portInterfaces)
+            foreach (PortInterface port in multi_switch.portInterfaces)
             {
                 try
                 {
@@ -151,7 +160,7 @@ namespace Switch
 
                 try
                 {
-                    //richTextBox1.AppendText(String.Format("Port {0} OUT : Ethernet II {1} | IPv4 {2} | ARP {3} | ICMP {4} | TCP {5} | UDP {6} \n", i, port.eth_out, port.ipv4_out, port.arp_out, port.icmp_out, port.tcp_out, port.udp_out));
+                    richTextBox1.AppendText(String.Format("Port {0} OUT : Ethernet II {1} | IPv4 {2} | ARP {3} | ICMP {4} | TCP {5} | UDP {6} \n", i, port.eth_out, port.ipv4_out, port.arp_out, port.icmp_out, port.tcp_out, port.udp_out));
                 }
                 catch (Exception ex)
                 {
@@ -165,14 +174,14 @@ namespace Switch
         private void button_setTimer_Click(object sender, EventArgs e)
         {
             decimal sec = numericUpDown_timer.Value;
-            multi_switch.Timer = Decimal.ToInt32(sec);
+            multi_switch.defTimeStamp = Decimal.ToInt32(sec);
         }
 
         //resetovanie CAM tabulky
         private void button_resetCam_Click(object sender, EventArgs e)
         {
-            //PrintCamTable(); len som skusal vypisat cam tabulku
-            MultilayerSwitch.camTable = new CamTableRecord[100];
+            multi_switch.camTable.Clear();
+            PrintCamTable();
         }
 
         //Resetovanie statistik na portoch
@@ -193,6 +202,25 @@ namespace Switch
                 MessageBox.Show("Statistiky su prazdne!", "Confirm");
             }*/
         }
+
+        //thread for updating Cam table and statistics
+        /*public void updateThread()
+        {
+            while (true)
+            {
+                if (richTextBox1.InvokeRequired || richTextBox2.InvokeRequired)
+                {
+                    BeginInvoke(new MethodInvoker(() => PrintCamTable()));
+                    BeginInvoke(new MethodInvoker(() => PrintStats()));
+                }
+                else
+                {
+                    PrintStats();
+                    PrintCamTable();
+                }
+                Thread.Sleep(2000);
+            }
+        }*/
 
         private void Form1_Load(object sender, EventArgs e)
         {
