@@ -17,9 +17,12 @@ namespace Switch.SwitchClasses
     {
         //aktualny port na ktorom som prijal ramec
         public NpcapDevice myself;
+        public NpcapDevice forward_device;
         //port na ktory preposielam komunikaciu
         private MultilayerSwitch multi_switch;
         private Form1 gui;
+        private int port;
+
         public int eth_in;
         public int eth_out;
         public int ipv4_in;
@@ -33,25 +36,29 @@ namespace Switch.SwitchClasses
         public int udp_in;
         public int udp_out;
 
-        public PortInterface(NpcapDevice dev_in, MultilayerSwitch multi_switch, Form1 gui_interface)
+        public PortInterface(NpcapDevice dev_in, NpcapDevice dev_out, MultilayerSwitch multi_switch, Form1 gui_interface, int port_num)
         {
             myself = dev_in;
+            forward_device = dev_out;
             this.multi_switch = multi_switch;
             gui = gui_interface;
+            port = port_num;
             //vytvorenie handlera na prichadzajuce packety
             myself.OnPacketArrival += new SharpPcap.PacketArrivalEventHandler(device_OnPacketArrival);
         }
 
         private void device_OnPacketArrival(object sender, CaptureEventArgs e)
         {
-            //nejaky counter a filter na statistiky
             var packet = Packet.ParsePacket(e.Packet.LinkLayerType, e.Packet.Data);
+
+            String mac = "";
 
             //counter
             if (packet is EthernetPacket)
             {
                 eth_in++;
                 var eth = ((EthernetPacket)packet);
+                mac = eth.SourceHardwareAddress.ToString();
                 var ipv4 = eth.Extract<PacketDotNet.IPv4Packet>();
                 var arp = eth.Extract<PacketDotNet.ArpPacket>();
                 if (ipv4 != null)
@@ -78,8 +85,18 @@ namespace Switch.SwitchClasses
                 }
             }
 
+            
+            multi_switch.CheckMACinTable(mac, port);
+
+
+
+            //skontrolujem 
             multi_switch.UpdateStats();
 
+            
+          
+            //preposlatie na druhy port v pripade ze sa tam nachadza zariadenie.
+            //forward_device.SendPacket(packet);
             //multi_switch.ForwardPacket(this, packet);
 
             /*try

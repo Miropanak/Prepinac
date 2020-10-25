@@ -49,10 +49,8 @@ namespace Switch
             MultilayerSwitch.device[1] = (NpcapDevice)allDevices[checkedListBox_foundDevices.CheckedIndices[1]];
 
             //vytvorenie instancii portov a priradenie do Multiswitchu
-            MultilayerSwitch.portInterfaces[0] = new PortInterface(MultilayerSwitch.device[0], multi_switch, this);
-            MultilayerSwitch.portInterfaces[1] = new PortInterface(MultilayerSwitch.device[1], multi_switch, this);
-
-            
+            MultilayerSwitch.portInterfaces[0] = new PortInterface(MultilayerSwitch.device[0], MultilayerSwitch.device[1], multi_switch, this, 0);
+            MultilayerSwitch.portInterfaces[1] = new PortInterface(MultilayerSwitch.device[1], MultilayerSwitch.device[0], multi_switch, this, 1);
 
             multi_switch.StartCapture();
         }
@@ -153,7 +151,7 @@ namespace Switch
 
                 try
                 {
-                    richTextBox1.AppendText(String.Format("Port {0} OUT : Ethernet II {1} | IPv4 {2} | ARP {3} | ICMP {4} | TCP {5} | UDP {6} \n", i, port.eth_out, port.ipv4_out, port.arp_out, port.icmp_out, port.tcp_out, port.udp_out));
+                    //richTextBox1.AppendText(String.Format("Port {0} OUT : Ethernet II {1} | IPv4 {2} | ARP {3} | ICMP {4} | TCP {5} | UDP {6} \n", i, port.eth_out, port.ipv4_out, port.arp_out, port.icmp_out, port.tcp_out, port.udp_out));
                 }
                 catch (Exception ex)
                 {

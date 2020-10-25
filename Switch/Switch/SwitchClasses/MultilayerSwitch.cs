@@ -49,6 +49,10 @@ namespace Switch.SwitchClasses
             //zisti ci packet sa zachytil na porte, kde sa nachadza aj cielove zariadenie
             //portInterfaces[0].myself.Equals(camTable[i].port_num);
 
+            /*if(src_port.myself.Equals(device[1]))
+            {
+
+            }*/
             //
         }
 
@@ -71,5 +75,14 @@ namespace Switch.SwitchClasses
         }
 
         public int ConfTimer { get { return Timer; } set { Timer = value;} }
+
+        public void CheckMACinTable(String mac, int port)
+        {
+            gui.richTextBox2.BeginInvoke(new MethodInvoker(() => gui.richTextBox2.AppendText(String.Format("MAC {0} port {1}\n", mac, port))));
+            /*if (gui.richTextBox1.InvokeRequired)
+                gui.BeginInvoke(new MethodInvoker(() => gui.PrintCamTable()));
+            else
+                gui.PrintCamTable();*/
+        }
     }
 }
