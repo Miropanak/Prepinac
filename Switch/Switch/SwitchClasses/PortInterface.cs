@@ -10,6 +10,7 @@ using SharpPcap.WinPcap;
 using PacketDotNet;
 using Switch;
 using System.Windows.Forms;
+using System.Net.NetworkInformation;
 
 namespace Switch.SwitchClasses
 {
@@ -49,8 +50,30 @@ namespace Switch.SwitchClasses
 
         private void device_OnPacketArrival(object sender, CaptureEventArgs e)
         {
-
+            
             var packet = Packet.ParsePacket(e.Packet.LinkLayerType, e.Packet.Data);
+
+            bool exist = false;
+            lock (multi_switch.buffer)
+            {
+                for (int j = 0; j < multi_switch.buffer.Count; j++)
+                {
+                    if (packet == multi_switch.buffer[j])
+                    {
+                        exist = true;
+                    }
+                }
+            }
+            
+
+            //ak sa packet uz nachadza uz v bufferi tak preskoc vsetko
+            if (exist == true)
+            {
+                return;
+            }
+
+            multi_switch.buffer.Add(packet);
+
 
             String src_mac = "";
             String dst_mac = "";
@@ -100,28 +123,28 @@ namespace Switch.SwitchClasses
             int dst_port = multi_switch.CheckMACPort(dst_mac);
             int src_port = multi_switch.CheckMACPort(src_mac);
 
-            //port som nenasiel posielam to na zariadenie, z ktoreho som to prijal 
-            if (dst_port == -1 && src_port != device_port)
+            //port som nenasiel posielam to na zariadenie, na druhe zariadenie
+
+            int port = ((device_port + 1) % 2);
+
+            if (dst_port == -1)
             {
                 //zvys statistiky
-                gui.richTextBox1.BeginInvoke(new MethodInvoker(() => gui.richTextBox1.AppendText(String.Format("Port: {0} src_port: {1} dst_port {2} srcMAC {3} dstMAC {4} dst nepoznam preposielam \n", src_port, src_port, dst_port, src_mac, dst_mac))));
-                forward_device.SendPacket(packet);
-       
+                gui.richTextBox1.BeginInvoke(new MethodInvoker(() => gui.richTextBox1.AppendText(String.Format("Port: {0} src_port: {1} dst_port {2} srcMAC {3} dstMAC {4} dst nepoznam preposielam \n", device_port, src_port, dst_port, src_mac, dst_mac))));
+                multi_switch.ForwardPacket(forward_device,  port, packet);
+
             }
             //zisti dst port
             else if (dst_port != src_port)
             {
-                gui.richTextBox1.BeginInvoke(new MethodInvoker(() => gui.richTextBox1.AppendText(String.Format("Port: {0} src_port: {1} dst_port {2} srcMAC {3} dstMAC {4} dst poznam preposielam \n", src_port, src_port, dst_port, src_mac, dst_mac))));
-
-                forward_device.SendPacket(packet);
+                gui.richTextBox1.BeginInvoke(new MethodInvoker(() => gui.richTextBox1.AppendText(String.Format("Port: {0} src_port: {1} dst_port {2} srcMAC {3} dstMAC {4} dst poznam preposielam \n", device_port, src_port, dst_port, src_mac, dst_mac))));
+                multi_switch.ForwardPacket(forward_device, port, packet);
             }
             //nerob nic lebo zariadenie tuto spravu uz dostal
             else
             {
-                gui.richTextBox1.BeginInvoke(new MethodInvoker(() => gui.richTextBox1.AppendText(String.Format("Port: {0} src_port: {1} dst_port {2} srcMAC {3} dstMAC {4} nerobim nic\n", src_port, src_port, dst_port, src_mac, dst_mac))));
+                gui.richTextBox1.BeginInvoke(new MethodInvoker(() => gui.richTextBox1.AppendText(String.Format("Port: {0} src_port: {1} dst_port {2} srcMAC {3} dstMAC {4} nerobim nic\n", device_port, src_port, dst_port, src_mac, dst_mac))));
             }
-
-
 
             //preposlatie na druhy port v pripade ze sa tam nachadza zariadenie.
             /*if(myself.Equals(MultilayerSwitch.portInterfaces[1]))

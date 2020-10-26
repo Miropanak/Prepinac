@@ -4,7 +4,9 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using PacketDotNet;
 using PacketDotNet.Ieee80211;
+using SharpPcap.LibPcap;
 using SharpPcap.Npcap;
 
 
@@ -16,6 +18,7 @@ namespace Switch.SwitchClasses
         public NpcapDevice[] device = new NpcapDevice[2];
         public List<CamTableRecord> camTable = new List<CamTableRecord>();
         public PortInterface[] portInterfaces = new PortInterface[2];
+        public List<Packet> buffer = new List<Packet>();
         public Form1 gui;
         public int defTimeStamp = 30;
         
@@ -45,18 +48,30 @@ namespace Switch.SwitchClasses
         //skontroluje ci dst MAC != src MAC
         //skontroluje ci ma dst MAC v tabulke ak hej tak to preposle na konkretny port
         //Ak nie tak preposle na vsetky okrem toho z kade prisiel
-        public void ForwardPacket(PortInterface src_port, PacketDotNet.Packet packet)
+        public void ForwardPacket(NpcapDevice device, int port, Packet packet)
         {
-            //zisti ci packet sa zachytil na porte, kde sa nachadza aj cielove zariadenie
-            //portInterfaces[0].myself.Equals(camTable[i].port_num);
+            bool forward = false;
 
-            /*if(src_port.myself.Equals(device[1]))
+            lock (buffer)
             {
+                for (int j = 0; j < buffer.Count; j++)
+                {
+                    if (packet == buffer[j])
+                    {
+                        buffer.RemoveAt(j);
+                        //forward = true;
+                    }
+                }
+            }
 
-            }*/
-            //
+            if (forward)
+            {
+                //zvys statitiky na device out
+                gui.richTextBox1.BeginInvoke(new MethodInvoker(() => gui.richTextBox1.AppendText(String.Format("Port: {0} Posielam \n", port))));
+                device.SendPacket(packet);
+            }
         }
-        
+
         public void ResetStats()
         {
             portInterfaces[0].ResetStats();
@@ -91,7 +106,7 @@ namespace Switch.SwitchClasses
             else
                 return true;
         }
-
+        
         public void UpdateCAMTable(String mac, int port)
         {
             CamTableRecord record = camTable.Find(rec => rec.mac_addr.Equals(mac));
