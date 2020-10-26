@@ -49,16 +49,22 @@ namespace Switch.SwitchClasses
 
         private void device_OnPacketArrival(object sender, CaptureEventArgs e)
         {
+            
+
+
             var packet = Packet.ParsePacket(e.Packet.LinkLayerType, e.Packet.Data);
 
-            String mac = "";
+            String src_mac = "";
+            String dst_mac = "";
 
             //Statistics Port IN
             if (packet is EthernetPacket)
             {
                 eth_in++;
                 var eth = ((EthernetPacket)packet);
-                mac = eth.SourceHardwareAddress.ToString();
+                src_mac = eth.SourceHardwareAddress.ToString();
+                dst_mac = eth.DestinationHardwareAddress.ToString();
+                gui.richTextBox1.BeginInvoke(new MethodInvoker(() => gui.richTextBox1.AppendText(String.Format("Port:{0} src_mac:{2}\n", port, src_mac))));
                 var ipv4 = eth.Extract<PacketDotNet.IPv4Packet>();
                 var arp = eth.Extract<PacketDotNet.ArpPacket>();
                 if (ipv4 != null)
@@ -85,10 +91,25 @@ namespace Switch.SwitchClasses
                 }
             }
 
-            String mac_addr = String.Format("{0}{1}:{2}{3}:{4}{5}:{6}{7}:{8}{9}:{10}{11}", mac[0], mac[1], mac[2], mac[3], mac[4], mac[5], mac[6], mac[7], mac[8], mac[9], mac[10], mac[11]);
 
-            multi_switch.CheckMACinTable(mac_addr, port);
 
+            //naformatovanie MAC adresy
+            src_mac = FormatMAC(src_mac);
+            dst_mac = FormatMAC(dst_mac);
+
+            //je dst port v tabulke?
+            int dst_port = multi_switch.CheckDstPort(dst_mac);
+
+            //uspech vrati port 0/1 neuspech vrati -1
+
+            //zisti na ktory port to prislo?
+            //zisti ci vies kde je ciel zariadenie?
+            //ak nie posli to na ten jeden zvysni port ak vies tak to posli na ten port ale nesmie to byt zdrojovy port
+
+
+
+
+            forward_device.SendPacket(packet);
             
           
             //preposlatie na druhy port v pripade ze sa tam nachadza zariadenie.
@@ -151,6 +172,20 @@ namespace Switch.SwitchClasses
             udp_out = 0;
         }
         
+        public String FormatMAC(String mac)
+        {
+            String mac_addr;
+            if(mac == "")
+            {
+                mac_addr = "00:00:00:00:00:00";
+            }
+            else
+            {
+                mac_addr = String.Format("{0}{1}:{2}{3}:{4}{5}:{6}{7}:{8}{9}:{10}{11}", mac[0], mac[1], mac[2], mac[3], mac[4], mac[5], mac[6], mac[7], mac[8], mac[9], mac[10], mac[11]);
+            }
+            return mac_addr;
+
+        }
 
         public int Eth_in { get; set; }
         public int Eth_out { get; set; }

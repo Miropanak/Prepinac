@@ -14,7 +14,6 @@ namespace Switch.SwitchClasses
     {
         //device[0] Ethernet 4, device[1] Ethernet 3
         public NpcapDevice[] device = new NpcapDevice[2];
-        //public CamTableRecord[] camTable = new CamTableRecord[10]; //vs public List<camTableRecord> camTable;
         public List<CamTableRecord> camTable = new List<CamTableRecord>();
         public PortInterface[] portInterfaces = new PortInterface[2];
         public Form1 gui;
@@ -29,9 +28,9 @@ namespace Switch.SwitchClasses
         //spusti na oboch zariadeniach capture start
         public void StartCapture()
         {
-            int readTimeoutMilliseconds = 10;
-            device[0].Open(SharpPcap.Npcap.OpenFlags.Promiscuous | SharpPcap.Npcap.OpenFlags.NoCaptureLocal, readTimeoutMilliseconds);
-            device[1].Open(SharpPcap.Npcap.OpenFlags.Promiscuous | SharpPcap.Npcap.OpenFlags.NoCaptureLocal, readTimeoutMilliseconds);
+            //int readTimeoutMilliseconds = 10;
+            device[0].Open(OpenFlags.Promiscuous | OpenFlags.NoCaptureLocal, 10);
+            device[1].Open(OpenFlags.Promiscuous | OpenFlags.NoCaptureLocal, 10);
             device[0].StartCapture();
             device[1].StartCapture();
         }
@@ -57,25 +56,43 @@ namespace Switch.SwitchClasses
             }*/
             //
         }
-
-        //aktualizovanie cam tabulky, najde zaznam podla mac a aktualizuje port
-        public void UpdateTable(String mac, int port) 
-        {
-
-        }
         
-        public void UpdateStats()
+        public void ResetStats()
         {
-            //gui.richTextBox1.BeginInvoke(new MethodInvoker(() => gui.richTextBox1.AppendText("Abrakadabra")));
-            /*if (gui.richTextBox1.InvokeRequired)
+            portInterfaces[0].ResetStats();
+            portInterfaces[1].ResetStats();
+            if (gui.richTextBox2.InvokeRequired)
                 gui.BeginInvoke(new MethodInvoker(() => gui.PrintStats()));
             else
-                gui.PrintStats();*/
+                gui.PrintStats();
         }
+
 
         public int ConfTimer { get { return defTimeStamp; } set { defTimeStamp = value;} }
 
-        public void CheckMACinTable(String mac, int port)
+        //zisti na akom porte sa nachadza zariadenie s danou MAC adresou
+        //port 0/1 alebo -1 ak sa nenachadza
+        public int CheckDstPort(String mac)
+        {
+            CamTableRecord record = camTable.Find(rec => rec.mac_addr.Equals(mac));
+            if (record == null)
+                return -1;
+            else
+                return record.port_num;
+        }
+
+
+        //zisti v ije MAC adresa v tabulke a true or false
+        public bool IsMACInTable(String mac)
+        {
+            CamTableRecord record = camTable.Find(rec => rec.mac_addr.Equals(mac));
+            if (record == null)
+                return false;
+            else
+                return true;
+        }
+
+        public void UpdateCAMTable(String mac, int port)
         {
             CamTableRecord record = camTable.Find(rec => rec.mac_addr.Equals(mac));
 
@@ -93,9 +110,17 @@ namespace Switch.SwitchClasses
             }
 
             if (gui.richTextBox2.InvokeRequired)
+            {
                 gui.BeginInvoke(new MethodInvoker(() => gui.PrintCamTable()));
+                //gui.BeginInvoke(new MethodInvoker(() => gui.PrintStats()));
+            }
+            
             else
+            {
                 gui.PrintCamTable();
+                //gui.PrintStats();
+            }
+                
         }
     }
 }

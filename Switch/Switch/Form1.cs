@@ -22,7 +22,6 @@ namespace Switch
     {
         private CaptureDeviceList allDevices;
         public MultilayerSwitch multi_switch;
-        private Thread thread;
 
         public Form1()
         {
@@ -116,7 +115,7 @@ namespace Switch
         //vypissanie CAM tabulky
         public void PrintCamTable()
         {
-            if (richTextBox2.InvokeRequired)
+            /*if (richTextBox2.InvokeRequired)
             {
                 richTextBox2.BeginInvoke(new MethodInvoker(() => richTextBox2.Clear()));
                 richTextBox2.BeginInvoke(new MethodInvoker(() => richTextBox2.AppendText(String.Format("MAC address\tPort\tTimer\n"))));
@@ -133,7 +132,7 @@ namespace Switch
                 {
                     richTextBox2.AppendText(String.Format("{0}\t{1}\t{2}\n", record.mac_addr, record.port_num, record.time_stamp));
                 }
-            }
+            }*/
         }
 
         //vypisanie statistik, to by bolo v pripade ze sa to vola z inej triedy
@@ -187,40 +186,8 @@ namespace Switch
         //Resetovanie statistik na portoch
         private void button_resetStats_Click(object sender, EventArgs e)
         {
-            PrintStats();
-            /*try
-            {
-                foreach(PortInterface port in MultilayerSwitch.portInterfaces)
-                {
-                    port.ResetStats();
-                }
-                /*MultilayerSwitch.portInterfaces[0].ResetStats();
-                MultilayerSwitch.portInterfaces[1].ResetStats();*/
-            /*}
-            catch (Exception except)
-            {
-                MessageBox.Show("Statistiky su prazdne!", "Confirm");
-            }*/
+            multi_switch.ResetStats();
         }
-
-        //thread for updating Cam table and statistics
-        /*public void updateThread()
-        {
-            while (true)
-            {
-                if (richTextBox1.InvokeRequired || richTextBox2.InvokeRequired)
-                {
-                    BeginInvoke(new MethodInvoker(() => PrintCamTable()));
-                    BeginInvoke(new MethodInvoker(() => PrintStats()));
-                }
-                else
-                {
-                    PrintStats();
-                    PrintCamTable();
-                }
-                Thread.Sleep(2000);
-            }
-        }*/
 
         private void Form1_Load(object sender, EventArgs e)
         {
