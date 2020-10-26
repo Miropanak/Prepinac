@@ -72,7 +72,7 @@ namespace Switch.SwitchClasses
 
         //zisti na akom porte sa nachadza zariadenie s danou MAC adresou
         //port 0/1 alebo -1 ak sa nenachadza
-        public int CheckDstPort(String mac)
+        public int CheckMACPort(String mac)
         {
             CamTableRecord record = camTable.Find(rec => rec.mac_addr.Equals(mac));
             if (record == null)

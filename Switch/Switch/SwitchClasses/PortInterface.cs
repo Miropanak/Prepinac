@@ -21,7 +21,7 @@ namespace Switch.SwitchClasses
         //port na ktory preposielam komunikaciu
         private MultilayerSwitch multi_switch;
         private Form1 gui;
-        private int port;
+        private int device_port;
 
         public int eth_in;
         public int eth_out;
@@ -42,15 +42,13 @@ namespace Switch.SwitchClasses
             forward_device = dev_out;
             this.multi_switch = multi_switch;
             gui = gui_interface;
-            port = port_num;
+            device_port = port_num;
             //vytvorenie handlera na prichadzajuce packety
             myself.OnPacketArrival += new SharpPcap.PacketArrivalEventHandler(device_OnPacketArrival);
         }
 
         private void device_OnPacketArrival(object sender, CaptureEventArgs e)
         {
-            
-
 
             var packet = Packet.ParsePacket(e.Packet.LinkLayerType, e.Packet.Data);
 
@@ -64,7 +62,6 @@ namespace Switch.SwitchClasses
                 var eth = ((EthernetPacket)packet);
                 src_mac = eth.SourceHardwareAddress.ToString();
                 dst_mac = eth.DestinationHardwareAddress.ToString();
-                gui.richTextBox1.BeginInvoke(new MethodInvoker(() => gui.richTextBox1.AppendText(String.Format("Port:{0} src_mac:{2}\n", port, src_mac))));
                 var ipv4 = eth.Extract<PacketDotNet.IPv4Packet>();
                 var arp = eth.Extract<PacketDotNet.ArpPacket>();
                 if (ipv4 != null)
@@ -92,26 +89,40 @@ namespace Switch.SwitchClasses
             }
 
 
-
             //naformatovanie MAC adresy
             src_mac = FormatMAC(src_mac);
             dst_mac = FormatMAC(dst_mac);
 
+            //aktualizovanie cam tabulky CAM table
+            multi_switch.UpdateCAMTable(src_mac, device_port);
+
             //je dst port v tabulke?
-            int dst_port = multi_switch.CheckDstPort(dst_mac);
+            int dst_port = multi_switch.CheckMACPort(dst_mac);
+            int src_port = multi_switch.CheckMACPort(src_mac);
 
-            //uspech vrati port 0/1 neuspech vrati -1
+            //port som nenasiel posielam to na zariadenie, z ktoreho som to prijal 
+            if (dst_port == -1 && src_port != device_port)
+            {
+                //zvys statistiky
+                gui.richTextBox1.BeginInvoke(new MethodInvoker(() => gui.richTextBox1.AppendText(String.Format("Port: {0} src_port: {1} dst_port {2} srcMAC {3} dstMAC {4} dst nepoznam preposielam \n", src_port, src_port, dst_port, src_mac, dst_mac))));
+                forward_device.SendPacket(packet);
+       
+            }
+            //zisti dst port
+            else if (dst_port != src_port)
+            {
+                gui.richTextBox1.BeginInvoke(new MethodInvoker(() => gui.richTextBox1.AppendText(String.Format("Port: {0} src_port: {1} dst_port {2} srcMAC {3} dstMAC {4} dst poznam preposielam \n", src_port, src_port, dst_port, src_mac, dst_mac))));
 
-            //zisti na ktory port to prislo?
-            //zisti ci vies kde je ciel zariadenie?
-            //ak nie posli to na ten jeden zvysni port ak vies tak to posli na ten port ale nesmie to byt zdrojovy port
+                forward_device.SendPacket(packet);
+            }
+            //nerob nic lebo zariadenie tuto spravu uz dostal
+            else
+            {
+                gui.richTextBox1.BeginInvoke(new MethodInvoker(() => gui.richTextBox1.AppendText(String.Format("Port: {0} src_port: {1} dst_port {2} srcMAC {3} dstMAC {4} nerobim nic\n", src_port, src_port, dst_port, src_mac, dst_mac))));
+            }
 
 
 
-
-            forward_device.SendPacket(packet);
-            
-          
             //preposlatie na druhy port v pripade ze sa tam nachadza zariadenie.
             /*if(myself.Equals(MultilayerSwitch.portInterfaces[1]))
                 forward_device.SendPacket(packet);
