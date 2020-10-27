@@ -38,7 +38,6 @@ namespace Switch.SwitchClasses
         public int tcp_out;
         public int udp_in;
         public int udp_out;
-        public int counter = 0;
 
         public PortInterface(NpcapDevice dev_in, NpcapDevice dev_out, MultilayerSwitch multi_switch, Form1 gui_interface, int port_num)
         {
@@ -59,184 +58,112 @@ namespace Switch.SwitchClasses
             }
 
             //sem zapnut tu kontrolu packetovaj s pridavanim, bez vymazavania,
-            var packet = Packet.ParsePacket(e.Packet.LinkLayerType, e.Packet.Data);
-            //bool forward = true;          
+            var packet = Packet.ParsePacket(e.Packet.LinkLayerType, e.Packet.Data);     
 
+            //skus vypisat
+            String src_mac = "";
+            String dst_mac = "";
 
-            //exist = multi_switch.buffer.Contains(packet);
-            //gui.richTextBox1.BeginInvoke(new MethodInvoker(() => gui.richTextBox1.AppendText(String.Format("Device_PacketOnArrival {0} \n", counter++))));
-
-
-            //try
-            //{
-            /*Monitor.Enter(multi_switch.buffer);
-            try
+            //Statistics Port IN
+            if (packet is EthernetPacket)
             {
-                lock (multi_switch.buffer)
-                {
-                    for (int j = 0; j < multi_switch.buffer.Count; j++)
-                    {
-                        if (packet == multi_switch.buffer[j])
-                        {
-                            gui.richTextBox1.BeginInvoke(new MethodInvoker(() => gui.richTextBox1.AppendText(String.Format("Port: {0} Zhoda neposielam \n", device_port))));
-                            forward = false;
-                            return;
-                        }
-                    }
-                }
+                var eth = ((EthernetPacket)packet);
+                src_mac = eth.SourceHardwareAddress.ToString();
+                dst_mac = eth.DestinationHardwareAddress.ToString();
+                UpdateStats(multi_switch.portInterfaces[device_port], packet, "IN");
             }
-            finally
-            {
-                Monitor.Exit(multi_switch.buffer);
-            }*/
-           /* }
-            catch (SynchronizationLockException SyncEx)
-            {
-                Console.WriteLine("A SynchronizationLockException occurred. Message:");
-                Console.WriteLine(SyncEx.Message);
-            }*/
-
-
-            /*if (forward)
-            {
-                multi_switch.buffer.Add(packet);
-                lock (multi_switch.buffer)
-                {
-                    for (int j = 0; j < multi_switch.buffer.Count; j++)
-                    {
-                        gui.richTextBox1.BeginInvoke(new MethodInvoker(() => gui.richTextBox1.AppendText(String.Format("Packet {0}\n{1}\n", j, packet.ToString()))));
-                    }
-                }*/
-
-                //skus vypisat
-                String src_mac = "";
-                String dst_mac = "";
-
-                //Statistics Port IN
-                if (packet is EthernetPacket)
-                {
-                    eth_in++;
-                    var eth = ((EthernetPacket)packet);
-                    src_mac = eth.SourceHardwareAddress.ToString();
-                    dst_mac = eth.DestinationHardwareAddress.ToString();
-
-                    if (src_mac == "02004C4F4F50" || src_mac == "01005E0000FC" || dst_mac == "02004C4F4F50" || dst_mac == "01005E0000FC")
-                    {
-                        //gui.richTextBox1.BeginInvoke(new MethodInvoker(() => gui.richTextBox1.AppendText(String.Format("Port: {0}  srcMAC {1} dstMAC {2} Nepovolena adresa \n", device_port, src_mac, dst_mac))));
-                        return;
-                    }
-
-                    var ipv4 = eth.Extract<PacketDotNet.IPv4Packet>();
-                    var arp = eth.Extract<PacketDotNet.ArpPacket>();
-                    if (ipv4 != null)
-                    {
-                        ipv4_in++;
-                        var tcp = eth.Extract<PacketDotNet.TcpPacket>();
-                        var udp = eth.Extract<PacketDotNet.UdpPacket>();
-                        var icmp = eth.Extract<PacketDotNet.IcmpV4Packet>();
-                        if (tcp != null)
-                        {
-                            tcp_in++;
-                            //if (tcp.DestinationPort == 80 || tcp.DestinationPort == 80)
-                            //    Http_in++;
-                        }
-
-                        if (udp != null)
-                            udp_in++;
-                        if (icmp != null)
-                            icmp_in++;
-                    }
-                    if (arp != null)
-                    {
-                        arp_in++;
-                    }
-                }
-
-
-                //naformatovanie MAC adresy
-                src_mac = FormatMAC(src_mac);
-                dst_mac = FormatMAC(dst_mac);
-
-                //aktualizovanie cam tabulky CAM table
-                lock (multi_switch.camTable)
-                {
-                    multi_switch.UpdateCAMTable(src_mac, device_port);
-                }
-
-
-                //je dst port v tabulke?
-                int dst_port;
-                int src_port;
-                lock (multi_switch.camTable)
-                {
-                    dst_port = multi_switch.CheckMACPort(dst_mac);
-                    src_port = multi_switch.CheckMACPort(src_mac);
-                }
-
-                //port som nenasiel posielam to na zariadenie, na druhe zariadenie
-
-
-                int port = ((device_port + 1) % 2);
-
-
-                if (dst_port == -1)
-                {
-                    //zvys statistiky
-                    //gui.richTextBox1.BeginInvoke(new MethodInvoker(() => gui.richTextBox1.AppendText(String.Format("Port: {0} src_port: {1} dst_port {2} srcMAC {3} dstMAC {4} dst nepoznam preposielam cez port {5} \n", device_port, src_port, dst_port, src_mac, dst_mac, dst_port))));
-                    //multi_switch.ForwardPacket(forward_device,  port, packet);
-                    //forward_device.SendPacket(packet);
-                    forward_device.SendPacket(e.Packet.Data);
-                    MultilayerSwitch.Set(new CaptureEventArgs(e.Packet, forward_device));
-            }
-                //zisti dst port
-                else if (dst_port != src_port)
-                {
-                    //gui.richTextBox1.BeginInvoke(new MethodInvoker(() => gui.richTextBox1.AppendText(String.Format("Port: {0} src_port: {1} dst_port {2} srcMAC {3} dstMAC {4} dst poznam preposielam cez port {5} \n", device_port, src_port, dst_port, src_mac, dst_mac, dst_port))));
-                    //multi_switch.ForwardPacket(forward_device, port, packet);
-                    forward_device.SendPacket(e.Packet.Data);
-                    MultilayerSwitch.Set(new CaptureEventArgs(e.Packet, forward_device));
-            }
-                //nerob nic lebo zariadenie tuto spravu uz dostal
-                else
-                {
-                    //gui.richTextBox1.BeginInvoke(new MethodInvoker(() => gui.richTextBox1.AppendText(String.Format("Port: {0} src_port: {1} dst_port {2} srcMAC {3} dstMAC {4} nerobim nic\n", device_port, src_port, dst_port, src_mac, dst_mac))));
-                }
-           /* }
             else
             {
-                gui.richTextBox1.BeginInvoke(new MethodInvoker(() => gui.richTextBox1.AppendText(String.Format("Port {0} Packet Exists!!!\n", device_port))));
-            }*/
-           
+                return;
+            }
 
+            //naformatovanie MAC adresy
+            src_mac = FormatMAC(src_mac);
+            dst_mac = FormatMAC(dst_mac);
+            multi_switch.UpdateCAMTable(src_mac, device_port);
 
-            /*bool forward = true;
-            gui.richTextBox1.BeginInvoke(new MethodInvoker(() => gui.richTextBox1.AppendText(String.Format("List<Packet> {0}\n", multi_switch.buffer.Count))));
+            //je dst port v tabulke?
+            int dst_port = multi_switch.CheckMACPort(dst_mac);
+            int src_port = multi_switch.CheckMACPort(src_mac);
+          
+            //port som nenasiel posielam to na zariadenie, na druhe zariadenie
+            int port = ((device_port + 1) % 2);
 
-            try
+            if (dst_port == -1)
             {
-                Monitor.Enter(multi_switch.buffer);
-                try
+
+                UpdateStats(multi_switch.portInterfaces[port], packet, "OUT");
+                forward_device.SendPacket(e.Packet.Data);
+                MultilayerSwitch.Set(new CaptureEventArgs(e.Packet, forward_device));
+            }
+            //zisti dst port
+            else if (dst_port != src_port && dst_port != -1)
+            {
+                UpdateStats(multi_switch.portInterfaces[dst_port], packet, "OUT");
+                forward_device.SendPacket(e.Packet.Data);
+                MultilayerSwitch.Set(new CaptureEventArgs(e.Packet, forward_device));
+            }
+            else
+            {
+                
+            }
+        }
+
+        private void UpdateStats(PortInterface port, Packet packet , String direction)
+        {
+            if (packet is EthernetPacket && direction == "IN")
+            {
+                port.eth_in++;
+                var eth = ((EthernetPacket)packet);
+
+                var ipv4 = eth.Extract<IPv4Packet>();
+                var arp = eth.Extract<ArpPacket>();
+                if (ipv4 != null)
                 {
-                    for (int j = 0; j < multi_switch.buffer.Count; j++)
-                    {
-                        if (packet == multi_switch.buffer[j])
-                        {
-                            gui.richTextBox1.BeginInvoke(new MethodInvoker(() => gui.richTextBox1.AppendText(String.Format("Port: {0} Duplikat Neposielam \n", device_port))));
-                            forward = false;
-                            
-                        }
-                    }
+                    port.ipv4_in++;
+                    var tcp = eth.Extract<TcpPacket>();
+                    var udp = eth.Extract<UdpPacket>();
+                    var icmp = eth.Extract<IcmpV4Packet>();
+                    if (tcp != null)
+                        port.tcp_in++;
+                    if (udp != null)
+                        port.udp_in++;
+                    if (icmp != null)
+                        port.icmp_in++;
                 }
-                finally
+                if (arp != null)
                 {
-                    Monitor.Exit(multi_switch.buffer);
+                    port.arp_in++;
                 }
             }
-            catch (SynchronizationLockException SyncEx)
+
+            if (packet is EthernetPacket && direction == "OUT")
             {
-                Console.WriteLine("A SynchronizationLockException occurred. Message:");
-                Console.WriteLine(SyncEx.Message);
-            }*/
+                port.eth_out++;
+                var eth = ((EthernetPacket)packet);
+
+                var ipv4 = eth.Extract<IPv4Packet>();
+                var arp = eth.Extract<ArpPacket>();
+                if (ipv4 != null)
+                {
+                    port.ipv4_out++;
+                    var tcp = eth.Extract<TcpPacket>();
+                    var udp = eth.Extract<UdpPacket>();
+                    var icmp = eth.Extract<IcmpV4Packet>();
+                    if (tcp != null)
+                        port.tcp_out++;
+
+                    if (udp != null)
+                        port.udp_out++;
+                    if (icmp != null)
+                        port.icmp_out++;
+                }
+                if (arp != null)
+                {
+                    port.arp_out++;
+                }
+            }
+
         }
 
         public void ResetStats()
@@ -267,7 +194,6 @@ namespace Switch.SwitchClasses
                 mac_addr = String.Format("{0}{1}:{2}{3}:{4}{5}:{6}{7}:{8}{9}:{10}{11}", mac[0], mac[1], mac[2], mac[3], mac[4], mac[5], mac[6], mac[7], mac[8], mac[9], mac[10], mac[11]);
             }
             return mac_addr;
-
         }
 
         public int Eth_in { get; set; }

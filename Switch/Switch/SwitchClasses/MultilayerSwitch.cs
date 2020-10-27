@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Text;
 using System.Threading;
@@ -25,6 +26,7 @@ namespace Switch.SwitchClasses
         private static object Lock = new object();
         public Form1 gui;
         public int defTimeStamp = 30;
+        private Thread timer;
         
         //
         public MultilayerSwitch(Form1 f1)
@@ -32,6 +34,86 @@ namespace Switch.SwitchClasses
             gui = f1;
         }
 
+        //spusti na oboch zariadeniach capture start
+        public void StartCapture()
+        {
+            //int readTimeoutMilliseconds = 10;
+            device[0].Open(OpenFlags.Promiscuous | OpenFlags.NoCaptureLocal, 10);
+            device[1].Open(OpenFlags.Promiscuous | OpenFlags.NoCaptureLocal, 10);
+            device[0].StartCapture();
+            device[1].StartCapture();
+
+            //tread fo update statistics and CAM table
+
+            timer = new Thread(UpdateCAMTimer);
+            timer.Start();
+        }
+
+        public void StopCapture()
+        {
+            device[0].Close();
+            device[1].Close();
+            timer.Abort();
+            //abort updating thread
+        }
+
+        public void UpdateCAMTimer()
+        {
+            while (true)
+            {
+                for (int i = 0; i < camTable.Count; i++)
+                {
+                    camTable[i].time_stamp--;
+                    if (camTable[i].time_stamp == 0)
+                        camTable.RemoveAt(i);
+                }
+                gui.BeginInvoke(new MethodInvoker(() => gui.PrintCamTable()));
+                gui.BeginInvoke(new MethodInvoker(() => gui.PrintStats()));
+                Thread.Sleep(1000);
+            }
+        }
+
+        public void ResetStats()
+        {
+            portInterfaces[0].ResetStats();
+            portInterfaces[1].ResetStats();
+            if (gui.richTextBox2.InvokeRequired)
+                gui.BeginInvoke(new MethodInvoker(() => gui.PrintStats()));
+            else
+                gui.PrintStats();
+        }
+
+
+        public int ConfTimer { set { defTimeStamp = value;} }
+
+        //zisti na akom porte sa nachadza zariadenie s danou MAC adresou
+        //port 0/1 alebo -1 ak sa nenachadza
+        public int CheckMACPort(String mac)
+        {
+            CamTableRecord record = camTable.Find(rec => rec.mac_addr.Equals(mac));
+            if (record == null)
+                return -1;
+            else
+                return record.port_num;
+        }
+        
+        public void UpdateCAMTable(String mac, int port)
+        {
+            CamTableRecord record = camTable.Find(rec => rec.mac_addr.Equals(mac));
+            
+            if (record != null)
+            {
+                if(record.port_num != port)
+                {
+                    record.port_num = port;
+                }
+                record.time_stamp = defTimeStamp;
+            }
+            else
+            {
+                camTable.Add(new CamTableRecord(mac, port, defTimeStamp));
+            }   
+        }
         public static void Set(CaptureEventArgs e)
         {
             lock (Lock)
@@ -55,168 +137,6 @@ namespace Switch.SwitchClasses
             }
 
             return false;
-        }
-
-        //spusti na oboch zariadeniach capture start
-        public void StartCapture()
-        {
-            //int readTimeoutMilliseconds = 10;
-            device[0].Open(OpenFlags.Promiscuous | OpenFlags.NoCaptureLocal, 10);
-            device[1].Open(OpenFlags.Promiscuous | OpenFlags.NoCaptureLocal, 10);
-            device[0].StartCapture();
-            device[1].StartCapture();
-
-            //tread fo update statistics and CAM table
-            //thread = new Thread(updateThread);
-            //thread.Start();
-        }
-
-        public void StopCapture()
-        {
-            device[0].Close();
-            device[1].Close();
-            //abort updating thread
-        }
-
-        //tato metoda bude preposielat komunikaciu
-        //skontroluje ci dst MAC != src MAC
-        //skontroluje ci ma dst MAC v tabulke ak hej tak to preposle na konkretny port
-        //Ak nie tak preposle na vsetky okrem toho z kade prisiel
-        /*public void ForwardPacket(NpcapDevice device, int port, Packet packet)
-        {
-            bool forward = true;
-
-            try
-            {
-                Monitor.Enter(buffer);
-                try
-                {
-                    for (int j = 0; j < buffer.Count; j++)
-                    {
-                        if (packet == buffer[j])
-                        {
-                            gui.richTextBox1.BeginInvoke(new MethodInvoker(() => gui.richTextBox1.AppendText(String.Format("Port: {0} Zhoda neposielam \n", port))));
-                            //buffer.RemoveAt(j);
-                            forward = false;
-                        }
-                    }
-                }
-                finally
-                {
-                    Monitor.Exit(buffer);
-                }
-            }
-            catch (SynchronizationLockException SyncEx)
-            {
-                Console.WriteLine("A SynchronizationLockException occurred. Message:");
-                Console.WriteLine(SyncEx.Message);
-            }
-
-            if (forward)
-            {
-                //zvys statitiky na device out
-                gui.richTextBox1.BeginInvoke(new MethodInvoker(() => gui.richTextBox1.AppendText(String.Format("Port: {0} Posielam \n", port))));
-                device.SendPacket(packet);
-
-                //Statistics Port OUT
-                if (packet is EthernetPacket)
-                {
-                    portInterfaces[port].eth_in++;
-                    var eth = ((EthernetPacket)packet);
-                    var ipv4 = eth.Extract<PacketDotNet.IPv4Packet>();
-                    var arp = eth.Extract<PacketDotNet.ArpPacket>();
-                    if (ipv4 != null)
-                    {
-                        portInterfaces[port].ipv4_out++;
-                        var tcp = eth.Extract<PacketDotNet.TcpPacket>();
-                        var udp = eth.Extract<PacketDotNet.UdpPacket>();
-                        var icmp = eth.Extract<PacketDotNet.IcmpV4Packet>();
-                        if (tcp != null)
-                        {
-                            portInterfaces[port].tcp_out++;
-                        }
-
-                        if (udp != null)
-                            portInterfaces[port].udp_out++;
-                        if (icmp != null)
-                            portInterfaces[port].icmp_out++;
-                    }
-                    if (arp != null)
-                    {
-                        portInterfaces[port].arp_out++;
-                    }
-                }
-            }
-        }*/
-
-        public void ResetStats()
-        {
-            portInterfaces[0].ResetStats();
-            portInterfaces[1].ResetStats();
-            if (gui.richTextBox2.InvokeRequired)
-                gui.BeginInvoke(new MethodInvoker(() => gui.PrintStats()));
-            else
-                gui.PrintStats();
-        }
-
-
-        public int ConfTimer { get { return defTimeStamp; } set { defTimeStamp = value;} }
-
-        //zisti na akom porte sa nachadza zariadenie s danou MAC adresou
-        //port 0/1 alebo -1 ak sa nenachadza
-        public int CheckMACPort(String mac)
-        {
-            CamTableRecord record = camTable.Find(rec => rec.mac_addr.Equals(mac));
-            if (record == null)
-                return -1;
-            else
-                return record.port_num;
-        }
-
-
-        //zisti v ije MAC adresa v tabulke a true or false
-        public bool IsMACInTable(String mac)
-        {
-            CamTableRecord record = camTable.Find(rec => rec.mac_addr.Equals(mac));
-            if (record == null)
-                return false;
-            else
-                return true;
-        }
-        
-        public void UpdateCAMTable(String mac, int port)
-        {
-            CamTableRecord record = camTable.Find(rec => rec.mac_addr.Equals(mac));
-            
-            if (mac.Equals("FF:FF:FF:FF:FF:FF"))
-            {
-                gui.richTextBox1.BeginInvoke(new MethodInvoker(() => gui.richTextBox1.AppendText(String.Format("Port: {0} Broadcast detected \n", port))));
-
-            }
-            else if (record != null)
-            {
-                if(record.port_num != port)
-                {
-                    record.port_num = port;
-                }
-                record.time_stamp = 30;
-            }
-            else
-            {
-                camTable.Add(new CamTableRecord(mac, port, defTimeStamp));
-            }
-
-            if (gui.richTextBox2.InvokeRequired)
-            {
-                gui.BeginInvoke(new MethodInvoker(() => gui.PrintCamTable()));
-                gui.BeginInvoke(new MethodInvoker(() => gui.PrintStats()));
-            }
-            else
-            {
-                gui.PrintCamTable();
-                gui.PrintStats();
-            }
-                
         }
     }
 }

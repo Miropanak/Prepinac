@@ -72,7 +72,7 @@ namespace Switch
             // Vypisanie zariadeni
             foreach (var dev in allDevices)
             {
-                checkedListBox_foundDevices.Items.Add(String.Format("Device number: {0} {1}", i, dev.Description), false);
+                checkedListBox_foundDevices.Items.Add(String.Format("{0}", dev.Description), false);
                 //richTextBox1.AppendText((String.Format("Device number: {0}\n{1} ", i, dev.ToString())));
                 i++;
             }
@@ -166,7 +166,16 @@ namespace Switch
         private void button_setTimer_Click(object sender, EventArgs e)
         {
             decimal sec = numericUpDown_timer.Value;
-            multi_switch.defTimeStamp = Decimal.ToInt32(sec);
+            if (sec < 5)
+            {
+                MessageBox.Show("Set timer on more than 5 sec!", "Confirm");
+            }
+            else
+            {
+                multi_switch.defTimeStamp = Decimal.ToInt32(sec);
+                label4.Text = String.Format("Timer is set on {0} sec", sec);
+            }   
+           
         }
 
         //resetovanie CAM tabulky
@@ -180,6 +189,7 @@ namespace Switch
         private void button_resetStats_Click(object sender, EventArgs e)
         {
             multi_switch.ResetStats();
+            PrintStats();
         }
 
         private void Form1_Load(object sender, EventArgs e)
