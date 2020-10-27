@@ -118,8 +118,8 @@ namespace Switch
         {
             if (richTextBox2.InvokeRequired)
             {
-                richTextBox2.BeginInvoke(new MethodInvoker(() => richTextBox2.Clear()));
-                richTextBox2.BeginInvoke(new MethodInvoker(() => richTextBox2.AppendText(String.Format("MAC address\tPort\tTimer\n"))));
+                //richTextBox2.BeginInvoke(new MethodInvoker(() => richTextBox2.Clear()));
+                //richTextBox2.BeginInvoke(new MethodInvoker(() => richTextBox2.AppendText(String.Format("MAC address\tPort\tTimer\n"))));
                 foreach (CamTableRecord record in multi_switch.camTable)
                 {
                     richTextBox2.BeginInvoke(new MethodInvoker(() => richTextBox2.AppendText(String.Format("{0}\t{1}\t{2}\n", record.mac_addr, record.port_num, record.time_stamp))));

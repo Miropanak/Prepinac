@@ -11,6 +11,7 @@ using PacketDotNet;
 using Switch;
 using System.Windows.Forms;
 using System.Net.NetworkInformation;
+using System.Threading;
 
 namespace Switch.SwitchClasses
 {
@@ -50,30 +51,37 @@ namespace Switch.SwitchClasses
 
         private void device_OnPacketArrival(object sender, CaptureEventArgs e)
         {
-            
+            //sem zapnut tu kontrolu packetovaj s pridavanim, bez vymazavania,
             var packet = Packet.ParsePacket(e.Packet.LinkLayerType, e.Packet.Data);
 
-            bool exist = false;
-            lock (multi_switch.buffer)
+            bool forward = true;
+
+            try
             {
-                for (int j = 0; j < multi_switch.buffer.Count; j++)
+                Monitor.Enter(multi_switch.buffer);
+                try
                 {
-                    if (packet == multi_switch.buffer[j])
+                    for (int j = 0; j < multi_switch.buffer.Count; j++)
                     {
-                        exist = true;
+                        if (packet == multi_switch.buffer[j])
+                        {
+                            gui.richTextBox1.BeginInvoke(new MethodInvoker(() => gui.richTextBox1.AppendText(String.Format("Port: {0} Duplikat Neposielam \n", device_port))));
+                            forward = false;
+                        }
                     }
                 }
+                finally
+                {
+                    Monitor.Exit(multi_switch.buffer);
+                }
             }
-            
-
-            //ak sa packet uz nachadza uz v bufferi tak preskoc vsetko
-            if (exist == true)
+            catch (SynchronizationLockException SyncEx)
             {
-                return;
+                Console.WriteLine("A SynchronizationLockException occurred. Message:");
+                Console.WriteLine(SyncEx.Message);
             }
 
             multi_switch.buffer.Add(packet);
-
 
             String src_mac = "";
             String dst_mac = "";
@@ -85,6 +93,13 @@ namespace Switch.SwitchClasses
                 var eth = ((EthernetPacket)packet);
                 src_mac = eth.SourceHardwareAddress.ToString();
                 dst_mac = eth.DestinationHardwareAddress.ToString();
+
+                /*if(src_mac == "02004C4F4F50" || src_mac == "01005E0000FC" || dst_mac == "02004C4F4F50" || dst_mac == "01005E0000FC")
+                {
+                    gui.richTextBox1.BeginInvoke(new MethodInvoker(() => gui.richTextBox1.AppendText(String.Format("Port: {0}  srcMAC {1} dstMAC {2} Nepovolena adresa \n", device_port, src_mac, dst_mac))));
+                    return;
+                }*/
+
                 var ipv4 = eth.Extract<PacketDotNet.IPv4Packet>();
                 var arp = eth.Extract<PacketDotNet.ArpPacket>();
                 if (ipv4 != null)
@@ -127,67 +142,30 @@ namespace Switch.SwitchClasses
 
             int port = ((device_port + 1) % 2);
 
+            /*if(dst_mac == "FF:FF:FF:FF:FF:FF")
+            {
+                gui.richTextBox1.BeginInvoke(new MethodInvoker(() => gui.richTextBox1.AppendText(String.Format("Port: {0} src_port: {1} dst_port {2} srcMAC {3} dstMAC {4} Broadcast \n", device_port, src_port, dst_port, src_mac, dst_mac))));
+
+            }*/
             if (dst_port == -1)
             {
                 //zvys statistiky
                 gui.richTextBox1.BeginInvoke(new MethodInvoker(() => gui.richTextBox1.AppendText(String.Format("Port: {0} src_port: {1} dst_port {2} srcMAC {3} dstMAC {4} dst nepoznam preposielam \n", device_port, src_port, dst_port, src_mac, dst_mac))));
-                multi_switch.ForwardPacket(forward_device,  port, packet);
-
+                //multi_switch.ForwardPacket(forward_device,  port, packet);
+                forward_device.SendPacket(packet);
             }
             //zisti dst port
             else if (dst_port != src_port)
             {
                 gui.richTextBox1.BeginInvoke(new MethodInvoker(() => gui.richTextBox1.AppendText(String.Format("Port: {0} src_port: {1} dst_port {2} srcMAC {3} dstMAC {4} dst poznam preposielam \n", device_port, src_port, dst_port, src_mac, dst_mac))));
-                multi_switch.ForwardPacket(forward_device, port, packet);
+                //multi_switch.ForwardPacket(forward_device, port, packet);
+                forward_device.SendPacket(packet);
             }
             //nerob nic lebo zariadenie tuto spravu uz dostal
             else
             {
                 gui.richTextBox1.BeginInvoke(new MethodInvoker(() => gui.richTextBox1.AppendText(String.Format("Port: {0} src_port: {1} dst_port {2} srcMAC {3} dstMAC {4} nerobim nic\n", device_port, src_port, dst_port, src_mac, dst_mac))));
             }
-
-            //preposlatie na druhy port v pripade ze sa tam nachadza zariadenie.
-            /*if(myself.Equals(MultilayerSwitch.portInterfaces[1]))
-                forward_device.SendPacket(packet);
-            //multi_switch.ForwardPacket(this, packet);
-
-            //Statistics Port OUT
-            /*try
-            {
-                //MultilayerSwitch.device[1].SendPacket(packet);
-                if (packet is EthernetPacket)
-                {
-                    Eth_out++;
-                    var eth = ((EthernetPacket)packet);
-                    var ipv4 = eth.Extract<PacketDotNet.IPv4Packet>();
-                    var arp = eth.Extract<PacketDotNet.ArpPacket>();
-                    if (ipv4 != null)
-                    {
-                        Ipv4_out++;
-                        var tcp = eth.Extract<PacketDotNet.TcpPacket>();
-                        var udp = eth.Extract<PacketDotNet.UdpPacket>();
-                        var icmp = eth.Extract<PacketDotNet.IcmpV4Packet>();
-                        if (tcp != null)
-                        {
-                            Tcp_out++;
-                            if (tcp.DestinationPort == 80 || tcp.DestinationPort == 80)
-                                Http_in++;
-                        }
-                        if (udp != null)
-                            Udp_out++;
-                        if (icmp != null)
-                            Icmp_out++;
-                    }
-                    if (arp != null)
-                    {
-                        Arp_out++;
-                    }
-                }
-            }
-            catch (Exception except)
-            {
-                gui.MessageBox.Show(String.Format("Nepodarilo sa odoslat packet" + except.Message), "Confirm");
-            }*/
         }
 
         public void ResetStats()

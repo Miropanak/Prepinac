@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using PacketDotNet;
@@ -50,18 +51,32 @@ namespace Switch.SwitchClasses
         //Ak nie tak preposle na vsetky okrem toho z kade prisiel
         public void ForwardPacket(NpcapDevice device, int port, Packet packet)
         {
-            bool forward = false;
+            bool forward = true;
 
-            lock (buffer)
+            try
             {
-                for (int j = 0; j < buffer.Count; j++)
+                Monitor.Enter(buffer);
+                try
                 {
-                    if (packet == buffer[j])
+                    for (int j = 0; j < buffer.Count; j++)
                     {
-                        buffer.RemoveAt(j);
-                        //forward = true;
+                        if (packet == buffer[j])
+                        {
+                            gui.richTextBox1.BeginInvoke(new MethodInvoker(() => gui.richTextBox1.AppendText(String.Format("Port: {0} Zhoda neposielam \n", port))));
+                            //buffer.RemoveAt(j);
+                            forward = false;
+                        }
                     }
                 }
+                finally
+                {
+                    Monitor.Exit(buffer);
+                }
+            }
+            catch (SynchronizationLockException SyncEx)
+            {
+                Console.WriteLine("A SynchronizationLockException occurred. Message:");
+                Console.WriteLine(SyncEx.Message);
             }
 
             if (forward)
@@ -69,6 +84,37 @@ namespace Switch.SwitchClasses
                 //zvys statitiky na device out
                 gui.richTextBox1.BeginInvoke(new MethodInvoker(() => gui.richTextBox1.AppendText(String.Format("Port: {0} Posielam \n", port))));
                 device.SendPacket(packet);
+
+                //Statistics Port OUT
+                if (packet is EthernetPacket)
+                {
+                    portInterfaces[port].eth_in++;
+                    var eth = ((EthernetPacket)packet);
+                    var ipv4 = eth.Extract<PacketDotNet.IPv4Packet>();
+                    var arp = eth.Extract<PacketDotNet.ArpPacket>();
+                    if (ipv4 != null)
+                    {
+                        portInterfaces[port].ipv4_out++;
+                        var tcp = eth.Extract<PacketDotNet.TcpPacket>();
+                        var udp = eth.Extract<PacketDotNet.UdpPacket>();
+                        var icmp = eth.Extract<PacketDotNet.IcmpV4Packet>();
+                        if (tcp != null)
+                        {
+                            portInterfaces[port].tcp_out++;
+                            /*if (tcp.DestinationPort == 80 || tcp.DestinationPort == 80)
+                                Http_in++;*/
+                        }
+
+                        if (udp != null)
+                            portInterfaces[port].udp_out++;
+                        if (icmp != null)
+                            portInterfaces[port].icmp_out++;
+                    }
+                    if (arp != null)
+                    {
+                        portInterfaces[port].arp_out++;
+                    }
+                }
             }
         }
 
