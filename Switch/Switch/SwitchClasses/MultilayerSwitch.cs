@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using System.Windows.Forms;
 using PacketDotNet;
 using PacketDotNet.Ieee80211;
+using SharpPcap;
 using SharpPcap.LibPcap;
 using SharpPcap.Npcap;
 
@@ -20,6 +21,8 @@ namespace Switch.SwitchClasses
         public List<CamTableRecord> camTable = new List<CamTableRecord>();
         public PortInterface[] portInterfaces = new PortInterface[2];
         public List<Packet> buffer = new List<Packet>();
+        public static List<CaptureEventArgs> SentPackets = new List<CaptureEventArgs>();
+        private static object Lock = new object();
         public Form1 gui;
         public int defTimeStamp = 30;
         
@@ -27,6 +30,31 @@ namespace Switch.SwitchClasses
         public MultilayerSwitch(Form1 f1)
         {
             gui = f1;
+        }
+
+        public static void Set(CaptureEventArgs e)
+        {
+            lock (Lock)
+            {
+                SentPackets.Add(e);
+            }
+        }
+
+        public static bool Check(CaptureEventArgs e)
+        {
+            lock (Lock)
+            {
+                foreach (var Pk in SentPackets)
+                {
+                    if (Pk.Packet.Data.SequenceEqual(e.Packet.Data) && Pk.Device == e.Device)
+                    {
+                        SentPackets.Remove(Pk);
+                        return true;
+                    }
+                }
+            }
+
+            return false;
         }
 
         //spusti na oboch zariadeniach capture start
@@ -37,19 +65,24 @@ namespace Switch.SwitchClasses
             device[1].Open(OpenFlags.Promiscuous | OpenFlags.NoCaptureLocal, 10);
             device[0].StartCapture();
             device[1].StartCapture();
+
+            //tread fo update statistics and CAM table
+            //thread = new Thread(updateThread);
+            //thread.Start();
         }
 
         public void StopCapture()
         {
             device[0].Close();
             device[1].Close();
+            //abort updating thread
         }
 
         //tato metoda bude preposielat komunikaciu
         //skontroluje ci dst MAC != src MAC
         //skontroluje ci ma dst MAC v tabulke ak hej tak to preposle na konkretny port
         //Ak nie tak preposle na vsetky okrem toho z kade prisiel
-        public void ForwardPacket(NpcapDevice device, int port, Packet packet)
+        /*public void ForwardPacket(NpcapDevice device, int port, Packet packet)
         {
             bool forward = true;
 
@@ -101,8 +134,6 @@ namespace Switch.SwitchClasses
                         if (tcp != null)
                         {
                             portInterfaces[port].tcp_out++;
-                            /*if (tcp.DestinationPort == 80 || tcp.DestinationPort == 80)
-                                Http_in++;*/
                         }
 
                         if (udp != null)
@@ -116,7 +147,7 @@ namespace Switch.SwitchClasses
                     }
                 }
             }
-        }
+        }*/
 
         public void ResetStats()
         {
@@ -156,8 +187,13 @@ namespace Switch.SwitchClasses
         public void UpdateCAMTable(String mac, int port)
         {
             CamTableRecord record = camTable.Find(rec => rec.mac_addr.Equals(mac));
+            
+            if (mac.Equals("FF:FF:FF:FF:FF:FF"))
+            {
+                gui.richTextBox1.BeginInvoke(new MethodInvoker(() => gui.richTextBox1.AppendText(String.Format("Port: {0} Broadcast detected \n", port))));
 
-            if (record != null)
+            }
+            else if (record != null)
             {
                 if(record.port_num != port)
                 {
@@ -173,13 +209,12 @@ namespace Switch.SwitchClasses
             if (gui.richTextBox2.InvokeRequired)
             {
                 gui.BeginInvoke(new MethodInvoker(() => gui.PrintCamTable()));
-                //gui.BeginInvoke(new MethodInvoker(() => gui.PrintStats()));
+                gui.BeginInvoke(new MethodInvoker(() => gui.PrintStats()));
             }
-            
             else
             {
                 gui.PrintCamTable();
-                //gui.PrintStats();
+                gui.PrintStats();
             }
                 
         }

@@ -54,10 +54,6 @@ namespace Switch
             multi_switch.portInterfaces[1] = new PortInterface(multi_switch.device[1], multi_switch.device[0], multi_switch, this, 1);
 
             multi_switch.StartCapture();
-
-            //tread fo update statistics and CAM table
-            //thread = new Thread(updateThread);
-            //thread.Start();
         }
 
         //Find devices button
@@ -96,17 +92,6 @@ namespace Switch
 
         }
 
-        /*private void device2_OnPacketArrival(object sender, CaptureEventArgs e)
-        {
-
-            //nejaky counter a filter na statistiky
-            var packet = Packet.ParsePacket(e.Packet.LinkLayerType, e.Packet.Data);
-            if (sender.Equals(MultilayerSwitch.device[1]))
-                richTextBox1.BeginInvoke(new MethodInvoker(() => richTextBox1.AppendText(String.Format("tu som Ethernet 3\n"))));
-            else
-                richTextBox1.BeginInvoke(new MethodInvoker(() => richTextBox1.AppendText(String.Format("tu som Ethernet 4\n"))));
-        }*/
-
         //vypisanie CAM tabulky, to by bolo v pripade ze sa to vola z inej triedy
         public string CamTableUpdate
         {
@@ -118,8 +103,8 @@ namespace Switch
         {
             if (richTextBox2.InvokeRequired)
             {
-                //richTextBox2.BeginInvoke(new MethodInvoker(() => richTextBox2.Clear()));
-                //richTextBox2.BeginInvoke(new MethodInvoker(() => richTextBox2.AppendText(String.Format("MAC address\tPort\tTimer\n"))));
+                richTextBox2.BeginInvoke(new MethodInvoker(() => richTextBox2.Clear()));
+                richTextBox2.BeginInvoke(new MethodInvoker(() => richTextBox2.AppendText(String.Format("MAC address\tPort\tTimer\n"))));
                 foreach (CamTableRecord record in multi_switch.camTable)
                 {
                     richTextBox2.BeginInvoke(new MethodInvoker(() => richTextBox2.AppendText(String.Format("{0}\t{1}\t{2}\n", record.mac_addr, record.port_num, record.time_stamp))));

@@ -48,17 +48,17 @@
             // 
             // richTextBox1
             // 
-            this.richTextBox1.Location = new System.Drawing.Point(40, 352);
+            this.richTextBox1.Location = new System.Drawing.Point(33, 39);
             this.richTextBox1.Margin = new System.Windows.Forms.Padding(4);
             this.richTextBox1.Name = "richTextBox1";
-            this.richTextBox1.Size = new System.Drawing.Size(916, 330);
+            this.richTextBox1.Size = new System.Drawing.Size(916, 773);
             this.richTextBox1.TabIndex = 0;
             this.richTextBox1.Text = "";
             // 
             // button_findDevices
             // 
             this.button_findDevices.Font = new System.Drawing.Font("Microsoft Sans Serif", 8F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(238)));
-            this.button_findDevices.Location = new System.Drawing.Point(981, 36);
+            this.button_findDevices.Location = new System.Drawing.Point(1427, 34);
             this.button_findDevices.Name = "button_findDevices";
             this.button_findDevices.Size = new System.Drawing.Size(131, 32);
             this.button_findDevices.TabIndex = 1;
@@ -69,7 +69,7 @@
             // button_startCapture
             // 
             this.button_startCapture.Font = new System.Drawing.Font("Microsoft Sans Serif", 8F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(238)));
-            this.button_startCapture.Location = new System.Drawing.Point(981, 107);
+            this.button_startCapture.Location = new System.Drawing.Point(1427, 105);
             this.button_startCapture.Name = "button_startCapture";
             this.button_startCapture.Size = new System.Drawing.Size(131, 32);
             this.button_startCapture.TabIndex = 2;
@@ -80,7 +80,7 @@
             // button_stopCapture
             // 
             this.button_stopCapture.Font = new System.Drawing.Font("Microsoft Sans Serif", 8F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(238)));
-            this.button_stopCapture.Location = new System.Drawing.Point(981, 169);
+            this.button_stopCapture.Location = new System.Drawing.Point(1427, 167);
             this.button_stopCapture.Name = "button_stopCapture";
             this.button_stopCapture.Size = new System.Drawing.Size(131, 32);
             this.button_stopCapture.TabIndex = 3;
@@ -91,7 +91,7 @@
             // checkedListBox_foundDevices
             // 
             this.checkedListBox_foundDevices.FormattingEnabled = true;
-            this.checkedListBox_foundDevices.Location = new System.Drawing.Point(40, 36);
+            this.checkedListBox_foundDevices.Location = new System.Drawing.Point(963, 352);
             this.checkedListBox_foundDevices.Name = "checkedListBox_foundDevices";
             this.checkedListBox_foundDevices.Size = new System.Drawing.Size(445, 259);
             this.checkedListBox_foundDevices.TabIndex = 5;
@@ -100,7 +100,7 @@
             // 
             this.label1.AutoSize = true;
             this.label1.Font = new System.Drawing.Font("Microsoft Sans Serif", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(238)));
-            this.label1.Location = new System.Drawing.Point(525, 9);
+            this.label1.Location = new System.Drawing.Point(953, 12);
             this.label1.Name = "label1";
             this.label1.Size = new System.Drawing.Size(105, 25);
             this.label1.TabIndex = 6;
@@ -109,7 +109,7 @@
             // button_resetStats
             // 
             this.button_resetStats.Font = new System.Drawing.Font("Microsoft Sans Serif", 8F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(238)));
-            this.button_resetStats.Location = new System.Drawing.Point(981, 403);
+            this.button_resetStats.Location = new System.Drawing.Point(1427, 401);
             this.button_resetStats.Name = "button_resetStats";
             this.button_resetStats.Size = new System.Drawing.Size(131, 32);
             this.button_resetStats.TabIndex = 7;
@@ -121,7 +121,7 @@
             // 
             this.label2.AutoSize = true;
             this.label2.Font = new System.Drawing.Font("Microsoft Sans Serif", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(238)));
-            this.label2.Location = new System.Drawing.Point(35, 323);
+            this.label2.Location = new System.Drawing.Point(28, 9);
             this.label2.Name = "label2";
             this.label2.Size = new System.Drawing.Size(90, 25);
             this.label2.TabIndex = 8;
@@ -129,7 +129,7 @@
             // 
             // richTextBox2
             // 
-            this.richTextBox2.Location = new System.Drawing.Point(528, 36);
+            this.richTextBox2.Location = new System.Drawing.Point(956, 39);
             this.richTextBox2.Name = "richTextBox2";
             this.richTextBox2.Size = new System.Drawing.Size(428, 259);
             this.richTextBox2.TabIndex = 9;
@@ -139,7 +139,7 @@
             // 
             this.dev_label.AutoSize = true;
             this.dev_label.Font = new System.Drawing.Font("Microsoft Sans Serif", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(238)));
-            this.dev_label.Location = new System.Drawing.Point(37, 9);
+            this.dev_label.Location = new System.Drawing.Point(960, 325);
             this.dev_label.Name = "dev_label";
             this.dev_label.Size = new System.Drawing.Size(82, 25);
             this.dev_label.TabIndex = 10;
@@ -147,7 +147,7 @@
             // 
             // button_resetCam
             // 
-            this.button_resetCam.Location = new System.Drawing.Point(981, 347);
+            this.button_resetCam.Location = new System.Drawing.Point(1427, 345);
             this.button_resetCam.Name = "button_resetCam";
             this.button_resetCam.Size = new System.Drawing.Size(131, 32);
             this.button_resetCam.TabIndex = 11;
@@ -157,7 +157,7 @@
             // 
             // button_setTimer
             // 
-            this.button_setTimer.Location = new System.Drawing.Point(981, 263);
+            this.button_setTimer.Location = new System.Drawing.Point(1427, 261);
             this.button_setTimer.Name = "button_setTimer";
             this.button_setTimer.Size = new System.Drawing.Size(131, 32);
             this.button_setTimer.TabIndex = 12;
@@ -168,7 +168,7 @@
             // label3
             // 
             this.label3.AutoSize = true;
-            this.label3.Location = new System.Drawing.Point(1118, 231);
+            this.label3.Location = new System.Drawing.Point(1564, 229);
             this.label3.Name = "label3";
             this.label3.Size = new System.Drawing.Size(30, 17);
             this.label3.TabIndex = 14;
@@ -176,7 +176,7 @@
             // 
             // numericUpDown_timer
             // 
-            this.numericUpDown_timer.Location = new System.Drawing.Point(981, 231);
+            this.numericUpDown_timer.Location = new System.Drawing.Point(1427, 229);
             this.numericUpDown_timer.Name = "numericUpDown_timer";
             this.numericUpDown_timer.Size = new System.Drawing.Size(131, 22);
             this.numericUpDown_timer.TabIndex = 15;
@@ -186,7 +186,7 @@
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 16F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(1163, 695);
+            this.ClientSize = new System.Drawing.Size(1610, 827);
             this.Controls.Add(this.numericUpDown_timer);
             this.Controls.Add(this.label3);
             this.Controls.Add(this.button_setTimer);
