@@ -123,7 +123,7 @@ namespace Switch
                 }
                 catch (Exception except)
                 {
-
+                    MessageBox.Show("Vyskytla sa interna chyba v CAM tabulke!", "Confirm");
                 }
             }
         }
@@ -139,24 +139,25 @@ namespace Switch
         {
             int i = 0;
             richTextBox1.Clear();
+            richTextBox1.AppendText(String.Format("Port num. IN/OUT\tEth II\tIPv4\tARP\tICMP\tTCP\tUDP\tHTTP\n"));
             foreach (PortInterface port in multi_switch.portInterfaces)
             {
                 try
                 {
-                    richTextBox1.AppendText(String.Format("Port {0} IN : Ethernet II {1} | IPv4 {2} | ARP {3} | ICMP {4} | TCP {5} | UDP {6} \n", i, port.eth_in, port.ipv4_in, port.arp_in, port.icmp_in, port.tcp_in, port.udp_in));
+                    richTextBox1.AppendText(String.Format("Port{0} IN:\t\t{1}\t{2}\t{3}\t{4}\t{5}\t{6}\t{7}\n", i, port.eth_in, port.ipv4_in, port.arp_in, port.icmp_in, port.tcp_in, port.udp_in, port.http_in));
                 }
                 catch (Exception except)
                 {
-                    richTextBox1.AppendText(String.Format("Port {0} IN Exception null pointer reference\n", i));
+                    MessageBox.Show(String.Format("Port {0} IN Exception null pointer reference\n", i), "Confirm");
                 }
 
                 try
                 {
-                    richTextBox1.AppendText(String.Format("Port {0} OUT : Ethernet II {1} | IPv4 {2} | ARP {3} | ICMP {4} | TCP {5} | UDP {6} \n", i, port.eth_out, port.ipv4_out, port.arp_out, port.icmp_out, port.tcp_out, port.udp_out));
+                    richTextBox1.AppendText(String.Format("Port{0} OUT:\t{1}\t{2}\t{3}\t{4}\t{5}\t{6}\t{7}\n", i, port.eth_out, port.ipv4_out, port.arp_out, port.icmp_out, port.tcp_out, port.udp_out, port.http_out));
                 }
                 catch (Exception except)
                 {
-                    richTextBox1.AppendText(String.Format("Port {0} OUT Exception null pointer reference\n", i));
+                    MessageBox.Show(String.Format("Port {0} OUT Exception null pointer reference\n", i), "Confirm");
                 }
                 i++;
             }
@@ -181,15 +182,29 @@ namespace Switch
         //resetovanie CAM tabulky
         private void button_resetCam_Click(object sender, EventArgs e)
         {
-            multi_switch.camTable.Clear();
-            PrintCamTable();
-        }
+            try
+            {
+                multi_switch.camTable.Clear();
+                PrintCamTable();
+            }
+            catch(Exception except)
+            {
+                MessageBox.Show("Neda sa resetovat CAM tabulka, ked este nebolo spustene prepinanie premavky", "Confirm");
+            }
+}
 
         //Resetovanie statistik na portoch
         private void button_resetStats_Click(object sender, EventArgs e)
         {
-            multi_switch.ResetStats();
-            PrintStats();
+            try
+            {
+                multi_switch.ResetStats();
+                PrintStats();
+            }
+            catch (Exception except)
+            {
+                MessageBox.Show("Neda sa resetovat statistika, ked este nebolo spustene prepinanie premavky", "Confirm");
+            }
         }
 
         private void Form1_Load(object sender, EventArgs e)

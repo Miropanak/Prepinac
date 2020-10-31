@@ -18,9 +18,5 @@ namespace Switch.SwitchClasses
             port_num = port;
             time_stamp = time;
         }
-
-        public string Mac_addr { get; set; }
-        public int Port_num { get; set; }
-        public int Time_stamp { get; set; }
     }
 }

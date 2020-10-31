@@ -38,6 +38,8 @@ namespace Switch.SwitchClasses
         public int tcp_out;
         public int udp_in;
         public int udp_out;
+        public int http_in;
+        public int http_out;
 
         public PortInterface(NpcapDevice dev_in, NpcapDevice dev_out, MultilayerSwitch multi_switch, Form1 gui_interface, int port_num)
         {
@@ -52,10 +54,11 @@ namespace Switch.SwitchClasses
 
         private void device_OnPacketArrival(object sender, CaptureEventArgs e)
         {
-            if (MultilayerSwitch.Check(e))
+
+            /*if (multi_switch.Check(e))
             {
                 return;
-            }
+            }*/
 
             //sem zapnut tu kontrolu packetovaj s pridavanim, bez vymazavania,
             var packet = Packet.ParsePacket(e.Packet.LinkLayerType, e.Packet.Data);     
@@ -72,40 +75,51 @@ namespace Switch.SwitchClasses
                 dst_mac = eth.DestinationHardwareAddress.ToString();
                 UpdateStats(multi_switch.portInterfaces[device_port], packet, "IN");
             }
-            else
-            {
-                return;
-            }
+            
 
             //naformatovanie MAC adresy
             src_mac = FormatMAC(src_mac);
             dst_mac = FormatMAC(dst_mac);
+
             multi_switch.UpdateCAMTable(src_mac, device_port);
 
+
             //je dst port v tabulke?
-            int dst_port = multi_switch.CheckMACPort(dst_mac);
             int src_port = multi_switch.CheckMACPort(src_mac);
+            int dst_port = multi_switch.CheckMACPort(dst_mac);
+          
           
             //port som nenasiel posielam to na zariadenie, na druhe zariadenie
             int port = ((device_port + 1) % 2);
 
-            if (dst_port == -1)
+            //cielove zariadenie sa nachadza na porte z ktoreho prisiel packet, preto neposelam
+            if(dst_port == src_port)
             {
-
+                //gui.richTextBox1.BeginInvoke(new MethodInvoker(() => gui.richTextBox1.AppendText(String.Format("I Port {0} srcMAC:{1} dstMAC:{2} srcPort:{3} dstPort:{4}\nPort {0} Device: {5} Neposielam\n", device_port, src_mac, dst_mac, src_port, dst_port, e.Device.MacAddress))));
+                return;
+            }
+            //cielovy port nepoznam preto posielam na vsetky porty okrem portu ktory tento packet prijal
+            else if (dst_port == -1)
+            {
+                //gui.richTextBox1.BeginInvoke(new MethodInvoker(() => gui.richTextBox1.AppendText(String.Format("II Port {0} srcMAC:{1} dstMAC:{2} srcPort:{3} dstPort:{4} Device: {5}\n", device_port, src_mac, dst_mac, src_port, dst_port, e.Device.MacAddress))));
+                //gui.richTextBox1.BeginInvoke(new MethodInvoker(() => gui.richTextBox1.AppendText(String.Format("II Port {0} Posielam\n", port))));
                 UpdateStats(multi_switch.portInterfaces[port], packet, "OUT");
+                //multi_switch.Set(new CaptureEventArgs(e.Packet, forward_device));
                 forward_device.SendPacket(e.Packet.Data);
-                MultilayerSwitch.Set(new CaptureEventArgs(e.Packet, forward_device));
             }
-            //zisti dst port
-            else if (dst_port != src_port && dst_port != -1)
+            //poznam cielovy port a odlisuje sa od zdrojoveho
+            else if (dst_port != src_port)
             {
+                //gui.richTextBox1.BeginInvoke(new MethodInvoker(() => gui.richTextBox1.AppendText(String.Format("III Port {0} srcMAC:{1} dstMAC:{2} srcPort:{3} dstPort:{4} Device: {5}\n", device_port, src_mac, dst_mac, src_port, dst_port, e.Device.MacAddress))));
+                //gui.richTextBox1.BeginInvoke(new MethodInvoker(() => gui.richTextBox1.AppendText(String.Format("III Port {0} Posielam\n", dst_port))));
                 UpdateStats(multi_switch.portInterfaces[dst_port], packet, "OUT");
-                forward_device.SendPacket(e.Packet.Data);
-                MultilayerSwitch.Set(new CaptureEventArgs(e.Packet, forward_device));
+                //multi_switch.Set(new CaptureEventArgs(e.Packet, forward_device));
+                forward_device.SendPacket(e.Packet.Data);   
             }
+            //sem by som sa uz nemal dostat
             else
             {
-                
+               MessageBox.Show("Chyba zaznamu v CAM tabulke", "confirm");
             }
         }
 
@@ -125,7 +139,12 @@ namespace Switch.SwitchClasses
                     var udp = eth.Extract<UdpPacket>();
                     var icmp = eth.Extract<IcmpV4Packet>();
                     if (tcp != null)
+                    {
                         port.tcp_in++;
+                        if (tcp.DestinationPort == 80 || tcp.SourcePort == 80)
+                            http_in++;
+                    }
+                        
                     if (udp != null)
                         port.udp_in++;
                     if (icmp != null)
@@ -151,7 +170,11 @@ namespace Switch.SwitchClasses
                     var udp = eth.Extract<UdpPacket>();
                     var icmp = eth.Extract<IcmpV4Packet>();
                     if (tcp != null)
+                    {
                         port.tcp_out++;
+                        if (tcp.DestinationPort == 80 || tcp.SourcePort == 80)
+                            http_out++;
+                    }
 
                     if (udp != null)
                         port.udp_out++;
@@ -180,6 +203,8 @@ namespace Switch.SwitchClasses
             tcp_out = 0;
             udp_in = 0;
             udp_out = 0;
+            http_in = 0;
+            http_out = 0;
         }
         
         public String FormatMAC(String mac)
@@ -195,18 +220,5 @@ namespace Switch.SwitchClasses
             }
             return mac_addr;
         }
-
-        public int Eth_in { get; set; }
-        public int Eth_out { get; set; }
-        public int Ipv4_in { get; set; }
-        public int Ipv4_out { get; set; }
-        public int Arp_in { get; set; }
-        public int Arp_out { get; set; }
-        public int Icmp_in { get; set; }
-        public int Icmp_out { get; set; }
-        public int Tcp_in { get; set; }
-        public int Tcp_out { get; set; }
-        public int Udp_in { get; set; }
-        public int Udp_out { get; set; }
     }
 }
