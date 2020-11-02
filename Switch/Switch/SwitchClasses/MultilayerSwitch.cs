@@ -17,9 +17,6 @@ namespace Switch.SwitchClasses
         public NpcapDevice[] device = new NpcapDevice[2];
         public List<CamTableRecord> camTable = new List<CamTableRecord>();
         public PortInterface[] portInterfaces = new PortInterface[2];
-        public List<Packet> buffer = new List<Packet>();
-        public static List<CaptureEventArgs> SentPackets = new List<CaptureEventArgs>();
-        private static object Lock = new object();
         public Form1 gui;
         public int defTimeStamp = 30;
         private Thread timer;
@@ -75,12 +72,7 @@ namespace Switch.SwitchClasses
                 gui.BeginInvoke(new MethodInvoker(() => gui.PrintStats()));
             else
                 gui.PrintStats();
-           
-            
         }
-
-
-        public int ConfTimer { set { defTimeStamp = value;} }
 
         //zisti na akom porte sa nachadza zariadenie s danou MAC adresou
         //port 0/1 alebo -1 ak sa nenachadza
@@ -93,6 +85,7 @@ namespace Switch.SwitchClasses
                 return record.port_num;
         }
         
+        //aktualizovanie CAM tabulky
         public void UpdateCAMTable(String mac, int port)
         {
             CamTableRecord record = camTable.Find(rec => rec.mac_addr.Equals(mac));
@@ -109,30 +102,6 @@ namespace Switch.SwitchClasses
             {
                 camTable.Add(new CamTableRecord(mac, port, defTimeStamp));
             }   
-        }
-        public void Set(CaptureEventArgs e)
-        {
-            lock (Lock)
-            {
-                SentPackets.Add(e);
-            }
-        }
-
-        public bool Check(CaptureEventArgs e)
-        {
-            lock (Lock)
-            {
-                foreach (var Pk in SentPackets)
-                {
-                    if (Pk.Packet.Data.SequenceEqual(e.Packet.Data) && Pk.Device == e.Device)// if (Pk.Packet.Data.SequenceEqual(e.Packet.Data) && Pk.Device == e.Device)
-                    {
-                        SentPackets.Remove(Pk);
-                        return true;
-                    }
-                }
-            }
-            //gui.richTextBox1.BeginInvoke(new MethodInvoker(() => gui.richTextBox1.AppendText(String.Format("IV Device {0} Duplikat\n", e.Device.MacAddress))));
-            return false;
         }
     }
 }
