@@ -16,6 +16,7 @@ namespace Switch.SwitchClasses
         //device[0] Ethernet 4, device[1] Ethernet 3
         public NpcapDevice[] device = new NpcapDevice[2];
         public List<CamTableRecord> camTable = new List<CamTableRecord>();
+        public List<Rule> rules = new List<Rule>();
         public PortInterface[] portInterfaces = new PortInterface[2];
         public Form1 gui;
         public int defTimeStamp = 30;
@@ -25,6 +26,23 @@ namespace Switch.SwitchClasses
         public MultilayerSwitch(Form1 f1)
         {
             gui = f1;
+        }
+
+        public void CreateRule(String ruleType, String port, String srcMac, String srcIP, String dstMac, String dstIP, String srcPort, String dstPort)
+        {
+            rules.Add(new Rule(ruleType, port, srcMac, srcIP, dstMac, dstIP, srcPort, dstPort));
+        }
+
+        public void EditRule(int index, String ruleType, String port, String srcMac, String srcIP, String dstMac, String dstIP, String srcPort, String dstPort)
+        {
+            rules[index].RuleType = ruleType;
+            rules[index].Port = port;
+            rules[index].SrcMAC = srcMac;
+            rules[index].SrcIP = srcIP;
+            rules[index].DstMAC = dstMac;
+            rules[index].DstIP = dstIP;
+            rules[index].SrcPort = srcPort;
+            rules[index].DstPort = dstPort;
         }
 
         //spusti na oboch zariadeniach capture start

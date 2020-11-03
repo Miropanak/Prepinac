@@ -1,20 +1,9 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
 using System.Drawing;
-using System.Linq;
-using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
 using System.Windows.Forms;
 using SharpPcap;
-using SharpPcap.LibPcap;
 using SharpPcap.Npcap;
-using SharpPcap.WinPcap;
-using PacketDotNet;
 using Switch.SwitchClasses;
-using System.Runtime.InteropServices;
 
 namespace Switch
 {
@@ -22,11 +11,24 @@ namespace Switch
     {
         private CaptureDeviceList allDevices;
         public MultilayerSwitch multi_switch;
+        private bool selected = false;
 
         public Form1()
         {
             InitializeComponent();
             multi_switch = new MultilayerSwitch(this);
+        }
+
+        private void SetRuleInputs()
+        {
+            textBox_srcMAC.Clear();
+            textBox_srcIP.Clear();
+            textBox_dstMAC.Clear();
+            textBox_dstIP.Clear();
+            textBox_dstMAC.Clear();
+            textBox_dstIP.Clear();
+            textBox_srcPort.Clear();
+            textBox_dstPort.Clear();
         }
 
         //Start Capture button
@@ -43,9 +45,9 @@ namespace Switch
             }
 
             //priradenie zariadeni na ktorych sa bude pocuvat
-            //Ethernet 4 MAC fe80::bd32:e328:48b3:ee5f%29
+            //Ethernet 4 MAC
             multi_switch.device[0] = (NpcapDevice)allDevices[checkedListBox_foundDevices.CheckedIndices[0]];
-            //Ethernet 3 MAC fe80::7d9c:2f68:b092:7993%15
+            //Ethernet 3 MAC
             multi_switch.device[1] = (NpcapDevice)allDevices[checkedListBox_foundDevices.CheckedIndices[1]];
 
             
@@ -73,7 +75,6 @@ namespace Switch
             foreach (var dev in allDevices)
             {
                 checkedListBox_foundDevices.Items.Add(String.Format("{0}", dev.Description), false);
-                //richTextBox1.AppendText((String.Format("Device number: {0}\n{1} ", i, dev.ToString())));
                 i++;
             }
         }
@@ -210,6 +211,126 @@ namespace Switch
         private void Form1_Load(object sender, EventArgs e)
         {
 
+        }
+
+        public void PrintRules()
+        {
+            richTextBox1.Clear();
+            foreach (Rule rule in multi_switch.rules)
+            {
+                richTextBox1.AppendText(String.Format("{0} {1} {2} {3} {4} {5} {6} {7}\n",
+                                                    rule.RuleType, rule.Port, rule.SrcMAC,
+                                                    rule.SrcIP, rule.DstMAC, rule.DstIP,
+                                                    rule.SrcPort, rule.DstPort));
+            }
+        }
+
+        private void button_createRule_Click(object sender, EventArgs e)
+        {
+            String ruleType = comboBox_permitDeny.Text;
+            String port = comboBox_port.Text;
+            String srcMac = textBox_srcMAC.Text;
+            String srcIP = textBox_srcIP.Text;
+            String dstMac = textBox_dstMAC.Text;
+            String dstIP = textBox_dstIP.Text;
+            String srcPort = textBox_srcPort.Text;
+            String dstPort = textBox_dstPort.Text;
+            multi_switch.CreateRule(ruleType, port, srcMac, srcIP, dstMac, dstIP, srcPort, dstPort);
+            var row = new String[] {ruleType, port, srcMac, srcIP, dstMac, dstIP, srcPort, dstPort};
+            var rule = new ListViewItem(row);
+            listView_rules.Items.Add(rule);
+            SetRuleInputs();
+        }
+
+        private void button_editRule_Click(object sender, EventArgs e)
+        {
+            if(selected == false)
+            {
+                MessageBox.Show("Select Rule to Edit", "Confirm");
+                return;
+            }
+
+            try
+            {
+                int index = listView_rules.Items.IndexOf(listView_rules.SelectedItems[0]);
+                String ruleType = comboBox_permitDeny.Text;
+                String port = comboBox_port.Text;
+                String srcMac = textBox_srcMAC.Text;
+                String srcIP = textBox_srcIP.Text;
+                String dstMac = textBox_dstMAC.Text;
+                String dstIP = textBox_dstIP.Text;
+                String srcPort = textBox_srcPort.Text;
+                String dstPort = textBox_dstPort.Text;
+                ListViewItem item = new ListViewItem();
+                item = listView_rules.SelectedItems[0];
+                item.SubItems[0].Text = ruleType;
+                item.SubItems[1].Text = port;
+                item.SubItems[2].Text = srcMac;
+                item.SubItems[3].Text = srcIP;
+                item.SubItems[4].Text = dstMac;
+                item.SubItems[5].Text = dstIP;
+                item.SubItems[6].Text = srcPort;
+                item.SubItems[7].Text = dstPort;
+                multi_switch.EditRule(index, ruleType, port, srcMac, srcIP, dstMac, dstIP, srcPort, dstPort);
+                listView_rules.SelectedIndices.Clear();
+                selected = false;
+                SetRuleInputs();
+                PrintRules();
+            }
+            catch (Exception except)
+            {
+                MessageBox.Show("Select Rule to Edit", "Confirm");
+            }
+        }
+
+        private void button_selectRule_Click(object sender, EventArgs e)
+        {
+            if (listView_rules.Items.Count > 0)
+            {
+                try
+                {
+                    int index = listView_rules.Items.IndexOf(listView_rules.SelectedItems[0]);
+                    comboBox_permitDeny.Text = multi_switch.rules[index].RuleType;
+                    comboBox_port.Text = multi_switch.rules[index].Port;
+                    textBox_srcMAC.Text = multi_switch.rules[index].SrcMAC;
+                    textBox_srcIP.Text = multi_switch.rules[index].SrcIP;
+                    textBox_dstMAC.Text = multi_switch.rules[index].DstMAC;
+                    textBox_dstIP.Text = multi_switch.rules[index].DstIP;
+                    textBox_srcPort.Text = multi_switch.rules[index].SrcPort;
+                    textBox_dstPort.Text = multi_switch.rules[index].DstPort;
+                    selected = true;
+                }
+                catch (Exception except)
+                {
+                    MessageBox.Show("Choose Rule to Edit", "Confirm");
+                }
+            }
+            else
+            {
+                MessageBox.Show("No Rules to Edit", "Confirm");
+            }
+        }
+
+        private void button_deleteRule_Click(object sender, EventArgs e)
+        {
+            if(listView_rules.Items.Count > 0)
+            {
+                try
+                {
+                    int index = listView_rules.Items.IndexOf(listView_rules.SelectedItems[0]);
+                    listView_rules.Items.Remove(listView_rules.SelectedItems[0]);
+                    multi_switch.rules.RemoveAt(index);
+                    PrintRules();
+                }
+                catch (Exception except)
+                {
+                    MessageBox.Show("Choose rule to Delete", "Confirm");
+                }
+            }
+            else
+            {
+                MessageBox.Show("No Rules to Delete", "Confirm");
+            }
         }
     }
 

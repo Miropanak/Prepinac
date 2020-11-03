@@ -76,6 +76,7 @@
     <Compile Include="SwitchClasses\CamTableRecord.cs" />
     <Compile Include="SwitchClasses\MultilayerSwitch.cs" />
     <Compile Include="SwitchClasses\PortInterface.cs" />
+    <Compile Include="SwitchClasses\Rule.cs" />
     <EmbeddedResource Include="Form1.resx">
       <DependentUpon>Form1.cs</DependentUpon>
     </EmbeddedResource>
