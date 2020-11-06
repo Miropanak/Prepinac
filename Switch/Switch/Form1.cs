@@ -17,18 +17,20 @@ namespace Switch
         {
             InitializeComponent();
             multi_switch = new MultilayerSwitch(this);
+            SetRuleInputs();
         }
 
         private void SetRuleInputs()
         {
-            textBox_srcMAC.Clear();
-            textBox_srcIP.Clear();
-            textBox_dstMAC.Clear();
-            textBox_dstIP.Clear();
-            textBox_dstMAC.Clear();
-            textBox_dstIP.Clear();
-            textBox_srcPort.Clear();
-            textBox_dstPort.Clear();
+            textBox_srcMAC.Text = "-";
+            textBox_srcIP.Text = "-";
+            textBox_dstMAC.Text = "-";
+            textBox_dstIP.Text = "-";
+            textBox_dstMAC.Text = "-";
+            textBox_dstIP.Text = "-";
+            textBox_protocol.Text = "-";
+            textBox_srcPort.Text = "-";
+            textBox_dstPort.Text = "-";
         }
 
         //Start Capture button
@@ -218,10 +220,10 @@ namespace Switch
             richTextBox1.Clear();
             foreach (Rule rule in multi_switch.rules)
             {
-                richTextBox1.AppendText(String.Format("{0} {1} {2} {3} {4} {5} {6} {7}\n",
-                                                    rule.RuleType, rule.Port, rule.SrcMAC,
+                richTextBox1.AppendText(String.Format("{0} {1} {2} {3} {4} {5} {6} {7} {8} {9}\n",
+                                                    rule.RuleType, rule.Port, rule.InOut, rule.SrcMAC,
                                                     rule.SrcIP, rule.DstMAC, rule.DstIP,
-                                                    rule.SrcPort, rule.DstPort));
+                                                    rule.Protocol, rule.SrcPort, rule.DstPort));
             }
         }
 
@@ -229,14 +231,16 @@ namespace Switch
         {
             String ruleType = comboBox_permitDeny.Text;
             String port = comboBox_port.Text;
+            String inOut = comboBox_inOut.Text;
             String srcMac = textBox_srcMAC.Text;
             String srcIP = textBox_srcIP.Text;
             String dstMac = textBox_dstMAC.Text;
             String dstIP = textBox_dstIP.Text;
+            String protocol = textBox_protocol.Text;
             String srcPort = textBox_srcPort.Text;
             String dstPort = textBox_dstPort.Text;
-            multi_switch.CreateRule(ruleType, port, srcMac, srcIP, dstMac, dstIP, srcPort, dstPort);
-            var row = new String[] {ruleType, port, srcMac, srcIP, dstMac, dstIP, srcPort, dstPort};
+            multi_switch.CreateRule(ruleType, port, inOut, srcMac, srcIP, dstMac, dstIP, protocol, srcPort, dstPort);
+            var row = new String[] {ruleType, port, inOut, srcMac, srcIP, dstMac, dstIP, protocol, srcPort, dstPort};
             var rule = new ListViewItem(row);
             listView_rules.Items.Add(rule);
             SetRuleInputs();
@@ -255,23 +259,27 @@ namespace Switch
                 int index = listView_rules.Items.IndexOf(listView_rules.SelectedItems[0]);
                 String ruleType = comboBox_permitDeny.Text;
                 String port = comboBox_port.Text;
+                String inOut = comboBox_inOut.Text;
                 String srcMac = textBox_srcMAC.Text;
                 String srcIP = textBox_srcIP.Text;
                 String dstMac = textBox_dstMAC.Text;
                 String dstIP = textBox_dstIP.Text;
+                String protocol = textBox_protocol.Text;
                 String srcPort = textBox_srcPort.Text;
                 String dstPort = textBox_dstPort.Text;
                 ListViewItem item = new ListViewItem();
                 item = listView_rules.SelectedItems[0];
                 item.SubItems[0].Text = ruleType;
                 item.SubItems[1].Text = port;
-                item.SubItems[2].Text = srcMac;
-                item.SubItems[3].Text = srcIP;
-                item.SubItems[4].Text = dstMac;
-                item.SubItems[5].Text = dstIP;
-                item.SubItems[6].Text = srcPort;
-                item.SubItems[7].Text = dstPort;
-                multi_switch.EditRule(index, ruleType, port, srcMac, srcIP, dstMac, dstIP, srcPort, dstPort);
+                item.SubItems[2].Text = inOut;
+                item.SubItems[3].Text = srcMac;
+                item.SubItems[4].Text = srcIP;
+                item.SubItems[5].Text = dstMac;
+                item.SubItems[6].Text = dstIP;
+                item.SubItems[7].Text = protocol;
+                item.SubItems[8].Text = srcPort;
+                item.SubItems[9].Text = dstPort;
+                multi_switch.EditRule(index, ruleType, port, inOut, srcMac, srcIP, dstMac, dstIP, protocol, srcPort, dstPort);
                 listView_rules.SelectedIndices.Clear();
                 selected = false;
                 SetRuleInputs();
@@ -292,10 +300,12 @@ namespace Switch
                     int index = listView_rules.Items.IndexOf(listView_rules.SelectedItems[0]);
                     comboBox_permitDeny.Text = multi_switch.rules[index].RuleType;
                     comboBox_port.Text = multi_switch.rules[index].Port;
+                    comboBox_inOut.Text = multi_switch.rules[index].InOut;
                     textBox_srcMAC.Text = multi_switch.rules[index].SrcMAC;
                     textBox_srcIP.Text = multi_switch.rules[index].SrcIP;
                     textBox_dstMAC.Text = multi_switch.rules[index].DstMAC;
                     textBox_dstIP.Text = multi_switch.rules[index].DstIP;
+                    textBox_protocol.Text = multi_switch.rules[index].Protocol;
                     textBox_srcPort.Text = multi_switch.rules[index].SrcPort;
                     textBox_dstPort.Text = multi_switch.rules[index].DstPort;
                     selected = true;

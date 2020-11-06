@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Windows.Forms;
+using Microsoft.SqlServer.Server;
 using PacketDotNet;
 using SharpPcap;
 using SharpPcap.Npcap;
@@ -28,19 +29,21 @@ namespace Switch.SwitchClasses
             gui = f1;
         }
 
-        public void CreateRule(String ruleType, String port, String srcMac, String srcIP, String dstMac, String dstIP, String srcPort, String dstPort)
+        public void CreateRule(String ruleType, String port, String inOut, String srcMac, String srcIP, String dstMac, String dstIP, String protocol, String srcPort, String dstPort)
         {
-            rules.Add(new Rule(ruleType, port, srcMac, srcIP, dstMac, dstIP, srcPort, dstPort));
+            rules.Add(new Rule(ruleType, port, inOut, srcMac, srcIP, dstMac, dstIP, protocol, srcPort, dstPort));
         }
 
-        public void EditRule(int index, String ruleType, String port, String srcMac, String srcIP, String dstMac, String dstIP, String srcPort, String dstPort)
+        public void EditRule(int index, String ruleType, String port, String inOut, String srcMac, String srcIP, String dstMac, String dstIP, String protocol, String srcPort, String dstPort)
         {
             rules[index].RuleType = ruleType;
             rules[index].Port = port;
+            rules[index].InOut = inOut;
             rules[index].SrcMAC = srcMac;
             rules[index].SrcIP = srcIP;
             rules[index].DstMAC = dstMac;
             rules[index].DstIP = dstIP;
+            rules[index].Protocol = protocol;
             rules[index].SrcPort = srcPort;
             rules[index].DstPort = dstPort;
         }
@@ -77,7 +80,7 @@ namespace Switch.SwitchClasses
                         camTable.RemoveAt(i);
                 }
                 gui.BeginInvoke(new MethodInvoker(() => gui.PrintCamTable()));
-                gui.BeginInvoke(new MethodInvoker(() => gui.PrintStats()));
+                //gui.BeginInvoke(new MethodInvoker(() => gui.PrintStats()));
                 Thread.Sleep(1000);
             }
         }
@@ -120,6 +123,137 @@ namespace Switch.SwitchClasses
             {
                 camTable.Add(new CamTableRecord(mac, port, defTimeStamp));
             }   
+        }
+
+        public bool FilterPacket(String inOut, int port_num,  String srcMAC, String dstMAC, Packet packet)
+        {
+            bool Permit;
+            int i = 0;
+            //prechadzam vsetky pravidla ak najdem pravidla ktore to matchne a je Permit
+            //tak return true, ak matchne a je Deny vrati false, ak prejde cely for each
+            //a nematchne ziadne pravidlo tak hodi false
+            foreach(Rule rule in rules)
+            {
+                gui.richTextBox1.BeginInvoke(new MethodInvoker(() => gui.richTextBox1.AppendText(String.Format("Rule {0} {1}\n", i, rule.RuleType))));
+                i = i + 1;
+                //set rule Permit or Deny
+                Permit = TypeControl(rule);
+                var eth = ((EthernetPacket)packet);
+                
+                //Port
+                if (rule.Port == "0" && port_num == 1 || rule.Port == "1" && port_num == 0)
+                    continue;
+                //kontrola in/out
+                if (rule.InOut == "IN" && inOut == "OUT" || rule.InOut == "OUT" && inOut == "IN")
+                    continue;
+                //srcMAC je - alebo rule.SrcMAC == srcMAC tak pokracujem v skumani pravidla
+                if (rule.SrcMAC != "-" && rule.SrcMAC != srcMAC)
+                    continue;
+                if (rule.DstMAC != "-" && rule.DstMAC != dstMAC)
+                    continue;
+
+
+                var ipv4 = eth.Extract<IPv4Packet>();
+                var arp = eth.Extract<ArpPacket>();
+                if (ipv4 != null)
+                {
+                    gui.richTextBox1.BeginInvoke(new MethodInvoker(() => gui.richTextBox1.AppendText("Som Ipv4 packet\n")));
+                    //kontrola IPv4 protokolu
+                    if (rule.Protocol != "-" && rule.Protocol != ipv4.Protocol.ToString())
+                    {
+                        gui.richTextBox1.BeginInvoke(new MethodInvoker(() => gui.richTextBox1.AppendText(String.Format("Protocol {0} != {1}\n", rule.Protocol, ipv4.Protocol.ToString()))));
+                        continue;
+                    }
+
+                    gui.richTextBox1.BeginInvoke(new MethodInvoker(() => gui.richTextBox1.AppendText(String.Format("Protocol {0} == {1}\n", rule.Protocol, ipv4.Protocol.ToString()))));
+
+                    //kontrola src a dst IP
+                    if (rule.SrcIP != "-" && rule.SrcIP != ipv4.SourceAddress.ToString())
+                        continue;
+                    if (rule.DstIP != "-" && rule.DstIP != ipv4.DestinationAddress.ToString())
+                        continue;
+
+                    var tcp = eth.Extract<TcpPacket>();
+                    var udp = eth.Extract<UdpPacket>();
+                    var icmp = eth.Extract<IcmpV4Packet>();    
+                    
+                    if (tcp != null)
+                    {
+                        gui.richTextBox1.BeginInvoke(new MethodInvoker(() => gui.richTextBox1.AppendText("Som TCP packet\n")));
+                        if (rule.SrcPort != "-" && rule.SrcPort != tcp.SourcePort.ToString())
+                            continue;
+                        if (rule.DstPort != "-" && rule.DstPort != tcp.DestinationPort.ToString())
+                            continue;
+                    }
+
+                    if (udp != null)
+                    {
+                        gui.richTextBox1.BeginInvoke(new MethodInvoker(() => gui.richTextBox1.AppendText("Som UDP packet\n")));
+                        if (rule.SrcPort != "-" && rule.SrcPort != udp.SourcePort.ToString())
+                            continue;
+                        if (rule.DstPort != "-" && rule.DstPort != udp.DestinationPort.ToString())
+                            continue;
+                    }
+                        
+                    if (icmp != null)
+                    {
+                        gui.richTextBox1.BeginInvoke(new MethodInvoker(() => gui.richTextBox1.AppendText("Som ICMP packet\n")));
+                        if (rule.SrcPort != "-" && rule.SrcPort != icmp.TypeCode.ToString())
+                            continue;
+                        if (rule.DstPort != "-" && rule.DstPort != icmp.TypeCode.ToString())
+                            continue;
+                    }
+
+                   
+                    //ak som presiel sem to znamena ze pravidlo preslo cez vsetky kontroly
+                    if (Permit)
+                    {
+                        gui.richTextBox1.BeginInvoke(new MethodInvoker(() => gui.richTextBox1.AppendText(String.Format("Zhoda s pravidlom {0} {1} Preposielam\n", i, rule.RuleType))));
+                        return true;
+                    }
+                    else
+                    {
+                        gui.richTextBox1.BeginInvoke(new MethodInvoker(() => gui.richTextBox1.AppendText(String.Format("Zhoda s pravidlom {0} {1} Nepreposielam\n", i, rule.RuleType))));
+                        return false;  
+                    }
+                                        
+                }
+                //arp briem ako protokol protokolu
+                if (arp != null)
+                {
+                    //kontrola ARP
+                    if (rule.Protocol != "-" && rule.Protocol != "arp")
+                    {
+                        gui.richTextBox1.BeginInvoke(new MethodInvoker(() => gui.richTextBox1.AppendText(String.Format("Protocol {0} != arp\n", rule.Protocol))));
+                        continue;
+                    }
+                    gui.richTextBox1.BeginInvoke(new MethodInvoker(() => gui.richTextBox1.AppendText(String.Format("Protocol {0} == arp\n", rule.Protocol))));
+
+                    //ak je to povolovacie pravidlo tak vrat pravdu ze moze presmerovat
+                    if (Permit)
+                    {
+                        gui.richTextBox1.BeginInvoke(new MethodInvoker(() => gui.richTextBox1.AppendText(String.Format("Zhoda s pravidlom {0} {1} Preposielam\n", i, rule.RuleType))));
+                        return true;
+                    }
+                    else
+                    {
+                        gui.richTextBox1.BeginInvoke(new MethodInvoker(() => gui.richTextBox1.AppendText(String.Format("Zhoda s pravidlom {0} {1} Nepreposielam\n", i, rule.RuleType))));
+                        return false;
+                    }
+                }
+
+            }
+
+            gui.richTextBox1.BeginInvoke(new MethodInvoker(() => gui.richTextBox1.AppendText(String.Format("Nenasiel som zhodu {0} Nepreposielam\n", i))));
+            return false;
+        }
+
+        public bool TypeControl(Rule rule)
+        {
+            if (rule.RuleType == "Permit")
+                return true;
+            else
+                return false;
         }
     }
 }

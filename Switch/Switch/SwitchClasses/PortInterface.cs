@@ -59,8 +59,14 @@ namespace Switch.SwitchClasses
                 src_mac = eth.SourceHardwareAddress.ToString();
                 dst_mac = eth.DestinationHardwareAddress.ToString();
                 UpdateStats(multi_switch.portInterfaces[device_port], packet, "IN");
+                if (multi_switch.FilterPacket("IN", device_port, src_mac, dst_mac, packet) == false)
+                {
+                    gui.richTextBox1.BeginInvoke(new MethodInvoker(() => gui.richTextBox1.AppendText(String.Format("Port {0} IN Nepreposielam\n\n", device_port))));
+                    return;
+                }
+                gui.richTextBox1.BeginInvoke(new MethodInvoker(() => gui.richTextBox1.AppendText(String.Format("Port {0} IN Preposielam\n\n", device_port))));
             }
-            
+
 
             //naformatovanie MAC adresy
             src_mac = FormatMAC(src_mac);
@@ -74,7 +80,6 @@ namespace Switch.SwitchClasses
             int src_port = multi_switch.CheckMACPort(src_mac);
             int dst_port = multi_switch.CheckMACPort(dst_mac);
           
-          
             //port som nenasiel posielam to na zariadenie, na druhe zariadenie
             int port = ((device_port + 1) % 2);
 
@@ -86,12 +91,24 @@ namespace Switch.SwitchClasses
             //cielovy port nepoznam preto posielam na vsetky porty okrem portu ktory tento packet prijal
             else if (dst_port == -1)
             {
+                if (multi_switch.FilterPacket("OUT", port, src_mac, dst_mac, packet) == false)
+                {
+                    gui.richTextBox1.BeginInvoke(new MethodInvoker(() => gui.richTextBox1.AppendText(String.Format("Port {0} OUT Nepreposielam\n\n", port))));
+                    return;
+                }
+                gui.richTextBox1.BeginInvoke(new MethodInvoker(() => gui.richTextBox1.AppendText(String.Format("Port {0} OUT Preposielam\n\n", port))));
                 UpdateStats(multi_switch.portInterfaces[port], packet, "OUT");
                 forward_device.SendPacket(packet);
             }
             //poznam cielovy port a odlisuje sa od zdrojoveho
             else if (dst_port != src_port)
             {
+                if (multi_switch.FilterPacket("OUT", dst_port, src_mac, dst_mac, packet) == false)
+                {
+                    gui.richTextBox1.BeginInvoke(new MethodInvoker(() => gui.richTextBox1.AppendText(String.Format("Port {0} OUT Nepreposielam\n\n",dst_port))));
+                    return;
+                }
+                gui.richTextBox1.BeginInvoke(new MethodInvoker(() => gui.richTextBox1.AppendText(String.Format("Port {0} OUT Preposielam\n\n", dst_port))));
                 UpdateStats(multi_switch.portInterfaces[dst_port], packet, "OUT");
                 forward_device.SendPacket(packet);   
             }
