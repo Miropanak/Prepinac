@@ -59,6 +59,10 @@ namespace Switch.SwitchClasses
                 src_mac = eth.SourceHardwareAddress.ToString();
                 dst_mac = eth.DestinationHardwareAddress.ToString();
                 UpdateStats(multi_switch.portInterfaces[device_port], packet, "IN");
+                //naformatovanie MAC adresy
+                src_mac = FormatMAC(src_mac);
+                dst_mac = FormatMAC(dst_mac);
+
                 if (multi_switch.FilterPacket("IN", device_port, src_mac, dst_mac, packet) == false)
                 {
                     gui.richTextBox1.BeginInvoke(new MethodInvoker(() => gui.richTextBox1.AppendText(String.Format("Port {0} IN Nepreposielam\n\n", device_port))));
@@ -68,9 +72,7 @@ namespace Switch.SwitchClasses
             }
 
 
-            //naformatovanie MAC adresy
-            src_mac = FormatMAC(src_mac);
-            dst_mac = FormatMAC(dst_mac);
+            
 
             //aktualizovanie CAM tabulky
             multi_switch.UpdateCAMTable(src_mac, device_port);

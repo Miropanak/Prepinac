@@ -80,7 +80,7 @@ namespace Switch.SwitchClasses
                         camTable.RemoveAt(i);
                 }
                 gui.BeginInvoke(new MethodInvoker(() => gui.PrintCamTable()));
-                //gui.BeginInvoke(new MethodInvoker(() => gui.PrintStats()));
+                gui.BeginInvoke(new MethodInvoker(() => gui.PrintStats()));
                 Thread.Sleep(1000);
             }
         }
@@ -134,7 +134,7 @@ namespace Switch.SwitchClasses
             //a nematchne ziadne pravidlo tak hodi false
             foreach(Rule rule in rules)
             {
-                gui.richTextBox1.BeginInvoke(new MethodInvoker(() => gui.richTextBox1.AppendText(String.Format("Rule {0} {1}\n", i, rule.RuleType))));
+                //gui.richTextBox1.BeginInvoke(new MethodInvoker(() => gui.richTextBox1.AppendText(String.Format("Rule {0} {1}\n", i, rule.RuleType))));
                 i = i + 1;
                 //set rule Permit or Deny
                 Permit = TypeControl(rule);
@@ -148,30 +148,46 @@ namespace Switch.SwitchClasses
                     continue;
                 //srcMAC je - alebo rule.SrcMAC == srcMAC tak pokracujem v skumani pravidla
                 if (rule.SrcMAC != "-" && rule.SrcMAC != srcMAC)
+                {
+                    //gui.richTextBox1.BeginInvoke(new MethodInvoker(() => gui.richTextBox1.AppendText(String.Format("SrcMAC {0} != {1}\n", rule.SrcMAC, srcMAC))));
                     continue;
-                if (rule.DstMAC != "-" && rule.DstMAC != dstMAC)
-                    continue;
+                }
+                //gui.richTextBox1.BeginInvoke(new MethodInvoker(() => gui.richTextBox1.AppendText(String.Format("SrcMAC {0} == {1}\n", rule.SrcMAC, srcMAC))));
 
+                if (rule.DstMAC != "-" && rule.DstMAC != dstMAC)
+                {
+                    //gui.richTextBox1.BeginInvoke(new MethodInvoker(() => gui.richTextBox1.AppendText(String.Format("DstMAC {0} != {1}\n", rule.DstMAC, dstMAC))));
+                    continue;
+                }
+                //gui.richTextBox1.BeginInvoke(new MethodInvoker(() => gui.richTextBox1.AppendText(String.Format("DstMAC {0} == {1}\n", rule.DstMAC, dstMAC))));
 
                 var ipv4 = eth.Extract<IPv4Packet>();
                 var arp = eth.Extract<ArpPacket>();
                 if (ipv4 != null)
                 {
-                    gui.richTextBox1.BeginInvoke(new MethodInvoker(() => gui.richTextBox1.AppendText("Som Ipv4 packet\n")));
+                    //gui.richTextBox1.BeginInvoke(new MethodInvoker(() => gui.richTextBox1.AppendText("Som Ipv4 packet\n")));
                     //kontrola IPv4 protokolu
                     if (rule.Protocol != "-" && rule.Protocol != ipv4.Protocol.ToString())
                     {
-                        gui.richTextBox1.BeginInvoke(new MethodInvoker(() => gui.richTextBox1.AppendText(String.Format("Protocol {0} != {1}\n", rule.Protocol, ipv4.Protocol.ToString()))));
+                       // gui.richTextBox1.BeginInvoke(new MethodInvoker(() => gui.richTextBox1.AppendText(String.Format("Protocol {0} != {1}\n", rule.Protocol, ipv4.Protocol.ToString()))));
                         continue;
                     }
 
-                    gui.richTextBox1.BeginInvoke(new MethodInvoker(() => gui.richTextBox1.AppendText(String.Format("Protocol {0} == {1}\n", rule.Protocol, ipv4.Protocol.ToString()))));
+                    //gui.richTextBox1.BeginInvoke(new MethodInvoker(() => gui.richTextBox1.AppendText(String.Format("Protocol {0} == {1}\n", rule.Protocol, ipv4.Protocol.ToString()))));
 
                     //kontrola src a dst IP
                     if (rule.SrcIP != "-" && rule.SrcIP != ipv4.SourceAddress.ToString())
+                    {
+                        //gui.richTextBox1.BeginInvoke(new MethodInvoker(() => gui.richTextBox1.AppendText(String.Format("SrcIP {0} != {1}\n", rule.SrcIP, ipv4.SourceAddress.ToString()))));
                         continue;
+                    }
+                    //gui.richTextBox1.BeginInvoke(new MethodInvoker(() => gui.richTextBox1.AppendText(String.Format("SrcIP {0} == {1}\n", rule.SrcIP, ipv4.SourceAddress.ToString()))));
                     if (rule.DstIP != "-" && rule.DstIP != ipv4.DestinationAddress.ToString())
+                    {
+                        //gui.richTextBox1.BeginInvoke(new MethodInvoker(() => gui.richTextBox1.AppendText(String.Format("DstIP {0} != {1}\n", rule.DstIP, ipv4.DestinationAddress.ToString()))));
                         continue;
+                    }
+                    //gui.richTextBox1.BeginInvoke(new MethodInvoker(() => gui.richTextBox1.AppendText(String.Format("DstIP {0} == {1}\n", rule.DstIP, ipv4.DestinationAddress.ToString()))));
 
                     var tcp = eth.Extract<TcpPacket>();
                     var udp = eth.Extract<UdpPacket>();
@@ -179,41 +195,65 @@ namespace Switch.SwitchClasses
                     
                     if (tcp != null)
                     {
-                        gui.richTextBox1.BeginInvoke(new MethodInvoker(() => gui.richTextBox1.AppendText("Som TCP packet\n")));
+                        //gui.richTextBox1.BeginInvoke(new MethodInvoker(() => gui.richTextBox1.AppendText("Som TCP packet\n")));
                         if (rule.SrcPort != "-" && rule.SrcPort != tcp.SourcePort.ToString())
+                        {
+                            //gui.richTextBox1.BeginInvoke(new MethodInvoker(() => gui.richTextBox1.AppendText(String.Format("Tcp port Src {0} != {1}\n", rule.SrcPort, tcp.SourcePort.ToString()))));
                             continue;
+                        }
+                        //gui.richTextBox1.BeginInvoke(new MethodInvoker(() => gui.richTextBox1.AppendText(String.Format("Tcp port Src {0} == {1}\n", rule.SrcPort, tcp.SourcePort.ToString()))));
                         if (rule.DstPort != "-" && rule.DstPort != tcp.DestinationPort.ToString())
+                        {
+                            //gui.richTextBox1.BeginInvoke(new MethodInvoker(() => gui.richTextBox1.AppendText(String.Format("Tcp port Dst {0} != {1}\n", rule.DstPort, tcp.DestinationPort.ToString()))));
                             continue;
+                        }
+                        //gui.richTextBox1.BeginInvoke(new MethodInvoker(() => gui.richTextBox1.AppendText(String.Format("Tcp port Dst {0} == {1}\n", rule.DstPort, tcp.DestinationPort.ToString()))));
                     }
 
                     if (udp != null)
                     {
-                        gui.richTextBox1.BeginInvoke(new MethodInvoker(() => gui.richTextBox1.AppendText("Som UDP packet\n")));
+                        //gui.richTextBox1.BeginInvoke(new MethodInvoker(() => gui.richTextBox1.AppendText("Som UDP packet\n")));
                         if (rule.SrcPort != "-" && rule.SrcPort != udp.SourcePort.ToString())
+                        {
+                            //gui.richTextBox1.BeginInvoke(new MethodInvoker(() => gui.richTextBox1.AppendText(String.Format("UDP port Src {0} != {1}\n", rule.SrcPort, udp.SourcePort.ToString()))));
                             continue;
+                        }
+                        //gui.richTextBox1.BeginInvoke(new MethodInvoker(() => gui.richTextBox1.AppendText(String.Format("UDP port Src {0} == {1}\n", rule.SrcPort, udp.SourcePort.ToString()))));
                         if (rule.DstPort != "-" && rule.DstPort != udp.DestinationPort.ToString())
+                        {
+                            //gui.richTextBox1.BeginInvoke(new MethodInvoker(() => gui.richTextBox1.AppendText(String.Format("Udp port Dst {0} != {1}\n", rule.DstPort, udp.DestinationPort.ToString()))));
                             continue;
-                    }
-                        
-                    if (icmp != null)
-                    {
-                        gui.richTextBox1.BeginInvoke(new MethodInvoker(() => gui.richTextBox1.AppendText("Som ICMP packet\n")));
-                        if (rule.SrcPort != "-" && rule.SrcPort != icmp.TypeCode.ToString())
-                            continue;
-                        if (rule.DstPort != "-" && rule.DstPort != icmp.TypeCode.ToString())
-                            continue;
+                        }
+                        //gui.richTextBox1.BeginInvoke(new MethodInvoker(() => gui.richTextBox1.AppendText(String.Format("Udp port Dst {0} == {1}\n", rule.DstPort, udp.DestinationPort.ToString()))));
                     }
 
-                   
+                    if (icmp != null)
+                    {
+                        //gui.richTextBox1.BeginInvoke(new MethodInvoker(() => gui.richTextBox1.AppendText("Som ICMP packet\n")));
+                        if (rule.SrcPort != "-" && rule.SrcPort != icmp.TypeCode.ToString())
+                        {
+                            //gui.richTextBox1.BeginInvoke(new MethodInvoker(() => gui.richTextBox1.AppendText(String.Format("Typ Icmp Src {0} != {1}\n", rule.SrcPort, icmp.TypeCode))));
+                            continue;
+                        }
+                        //gui.richTextBox1.BeginInvoke(new MethodInvoker(() => gui.richTextBox1.AppendText(String.Format("Typ Icmp Src {0} == {1}\n", rule.SrcPort, icmp.TypeCode))));
+                        if (rule.DstPort != "-" && rule.DstPort != icmp.TypeCode.ToString())
+                        {
+                            //gui.richTextBox1.BeginInvoke(new MethodInvoker(() => gui.richTextBox1.AppendText(String.Format("Typ Icmp Dst {0} != {1}\n", rule.DstPort, icmp.TypeCode))));
+                            continue;
+                        }
+                        //gui.richTextBox1.BeginInvoke(new MethodInvoker(() => gui.richTextBox1.AppendText(String.Format("Typ Icmp Dst {0} == {1}\n", rule.DstPort, icmp.TypeCode))));
+                    }
+
+
                     //ak som presiel sem to znamena ze pravidlo preslo cez vsetky kontroly
                     if (Permit)
                     {
-                        gui.richTextBox1.BeginInvoke(new MethodInvoker(() => gui.richTextBox1.AppendText(String.Format("Zhoda s pravidlom {0} {1} Preposielam\n", i, rule.RuleType))));
+                        //gui.richTextBox1.BeginInvoke(new MethodInvoker(() => gui.richTextBox1.AppendText(String.Format("Zhoda s pravidlom {0} {1} Preposielam\n", i, rule.RuleType))));
                         return true;
                     }
                     else
                     {
-                        gui.richTextBox1.BeginInvoke(new MethodInvoker(() => gui.richTextBox1.AppendText(String.Format("Zhoda s pravidlom {0} {1} Nepreposielam\n", i, rule.RuleType))));
+                        //gui.richTextBox1.BeginInvoke(new MethodInvoker(() => gui.richTextBox1.AppendText(String.Format("Zhoda s pravidlom {0} {1} Nepreposielam\n", i, rule.RuleType))));
                         return false;  
                     }
                                         
@@ -222,29 +262,35 @@ namespace Switch.SwitchClasses
                 if (arp != null)
                 {
                     //kontrola ARP
-                    if (rule.Protocol != "-" && rule.Protocol != "arp")
+                    //gui.richTextBox1.BeginInvoke(new MethodInvoker(() => gui.richTextBox1.AppendText(String.Format("Som ARP\n"))));
+                    if (rule.SrcPort != "-" || rule.DstPort != "-")
                     {
-                        gui.richTextBox1.BeginInvoke(new MethodInvoker(() => gui.richTextBox1.AppendText(String.Format("Protocol {0} != arp\n", rule.Protocol))));
+                        //gui.richTextBox1.BeginInvoke(new MethodInvoker(() => gui.richTextBox1.AppendText(String.Format("SrcPort == {0} DstPort == {1} \n", rule.SrcPort, rule.DstPort))));
                         continue;
                     }
-                    gui.richTextBox1.BeginInvoke(new MethodInvoker(() => gui.richTextBox1.AppendText(String.Format("Protocol {0} == arp\n", rule.Protocol))));
+                    if (rule.Protocol != "-" && rule.Protocol != "arp")
+                    {
+                        //gui.richTextBox1.BeginInvoke(new MethodInvoker(() => gui.richTextBox1.AppendText(String.Format("Protocol {0} != arp\n", rule.Protocol))));
+                        continue;
+                    }
+                    //gui.richTextBox1.BeginInvoke(new MethodInvoker(() => gui.richTextBox1.AppendText(String.Format("Protocol {0} == arp\n", rule.Protocol))));
 
                     //ak je to povolovacie pravidlo tak vrat pravdu ze moze presmerovat
                     if (Permit)
                     {
-                        gui.richTextBox1.BeginInvoke(new MethodInvoker(() => gui.richTextBox1.AppendText(String.Format("Zhoda s pravidlom {0} {1} Preposielam\n", i, rule.RuleType))));
+                        //gui.richTextBox1.BeginInvoke(new MethodInvoker(() => gui.richTextBox1.AppendText(String.Format("Zhoda s pravidlom {0} {1} Preposielam\n", i, rule.RuleType))));
                         return true;
                     }
                     else
                     {
-                        gui.richTextBox1.BeginInvoke(new MethodInvoker(() => gui.richTextBox1.AppendText(String.Format("Zhoda s pravidlom {0} {1} Nepreposielam\n", i, rule.RuleType))));
+                        //gui.richTextBox1.BeginInvoke(new MethodInvoker(() => gui.richTextBox1.AppendText(String.Format("Zhoda s pravidlom {0} {1} Nepreposielam\n", i, rule.RuleType))));
                         return false;
                     }
                 }
 
             }
 
-            gui.richTextBox1.BeginInvoke(new MethodInvoker(() => gui.richTextBox1.AppendText(String.Format("Nenasiel som zhodu {0} Nepreposielam\n", i))));
+            //gui.richTextBox1.BeginInvoke(new MethodInvoker(() => gui.richTextBox1.AppendText(String.Format("Nenasiel som zhodu {0} Nepreposielam\n", i))));
             return false;
         }
 
