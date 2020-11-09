@@ -1,12 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Windows.Forms;
-using Microsoft.SqlServer.Server;
 using PacketDotNet;
-using SharpPcap;
 using SharpPcap.Npcap;
 
 
@@ -80,7 +77,7 @@ namespace Switch.SwitchClasses
                         camTable.RemoveAt(i);
                 }
                 gui.BeginInvoke(new MethodInvoker(() => gui.PrintCamTable()));
-                gui.BeginInvoke(new MethodInvoker(() => gui.PrintStats()));
+                //gui.BeginInvoke(new MethodInvoker(() => gui.PrintStats()));
                 Thread.Sleep(1000);
             }
         }
@@ -135,7 +132,7 @@ namespace Switch.SwitchClasses
             foreach(Rule rule in rules)
             {
                 //gui.richTextBox1.BeginInvoke(new MethodInvoker(() => gui.richTextBox1.AppendText(String.Format("Rule {0} {1}\n", i, rule.RuleType))));
-                i = i + 1;
+                i++;
                 //set rule Permit or Deny
                 Permit = TypeControl(rule);
                 var eth = ((EthernetPacket)packet);
@@ -169,7 +166,7 @@ namespace Switch.SwitchClasses
                     //kontrola IPv4 protokolu
                     if (rule.Protocol != "-" && rule.Protocol != ipv4.Protocol.ToString())
                     {
-                       // gui.richTextBox1.BeginInvoke(new MethodInvoker(() => gui.richTextBox1.AppendText(String.Format("Protocol {0} != {1}\n", rule.Protocol, ipv4.Protocol.ToString()))));
+                        //gui.richTextBox1.BeginInvoke(new MethodInvoker(() => gui.richTextBox1.AppendText(String.Format("Protocol {0} != {1}\n", rule.Protocol, ipv4.Protocol.ToString()))));
                         continue;
                     }
 
@@ -300,6 +297,34 @@ namespace Switch.SwitchClasses
                 return true;
             else
                 return false;
+        }
+
+        public void CreateLog(String msg, int severity)
+        {
+            DateTime localDate = DateTime.Now;
+            String date = String.Format("{0:MMM dd yyyy HH':'mm':'ss}", localDate);
+            Byte[] LogData = Encoding.ASCII.GetBytes(String.Format("{0} {1} {2}", severity, date, msg));
+            
+            
+            ushort udpSourcePort = 69;
+            ushort udpDestinationPort = 69;
+            var udpPacket = new UdpPacket(udpSourcePort, udpDestinationPort);
+            //vytvorenie logu, so severitou a msg
+            udpPacket.PayloadData = LogData;
+            var ipSourceAddress = System.Net.IPAddress.Parse("10.0.0.2");
+            var ipDestinationAddress = System.Net.IPAddress.Parse("10.0.0.3");
+            var ipPacket = new IPv4Packet(ipSourceAddress, ipDestinationAddress);
+
+            var sourceHwAddress = "90-90-90-90-90-90";
+            var ethernetSourceHwAddress = System.Net.NetworkInformation.PhysicalAddress.Parse(sourceHwAddress);
+            var destinationHwAddress = "FF-FF-FF-FF-FF-FF";
+            var ethernetDestinationHwAddress = System.Net.NetworkInformation.PhysicalAddress.Parse(destinationHwAddress);
+
+            var ethernetPacket = new EthernetPacket(ethernetSourceHwAddress,
+                                                    ethernetDestinationHwAddress, EthernetType.None);
+
+            ipPacket.PayloadPacket = udpPacket;
+            ethernetPacket.PayloadPacket = ipPacket;
         }
     }
 }
