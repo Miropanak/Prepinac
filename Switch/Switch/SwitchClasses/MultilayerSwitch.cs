@@ -74,7 +74,11 @@ namespace Switch.SwitchClasses
                 {
                     camTable[i].time_stamp--;
                     if (camTable[i].time_stamp == 0)
+                    {
+                        CreateLog(String.Format("Z CAM tabuľky bol vymazaný starý záznam: MAC {0}, port {1}", camTable[i].mac_addr, camTable[i].port_num), 0);  
                         camTable.RemoveAt(i);
+                    }
+                        
                 }
                 gui.BeginInvoke(new MethodInvoker(() => gui.PrintCamTable()));
                 //gui.BeginInvoke(new MethodInvoker(() => gui.PrintStats()));
@@ -112,6 +116,7 @@ namespace Switch.SwitchClasses
             {
                 if(record.port_num != port)
                 {
+                    CreateLog(String.Format("Zariadenie s MAC {0} sa premiestnilo z portu {1} na port {2}", record.mac_addr, record.port_num, port), 0);
                     record.port_num = port;
                 }
                 record.time_stamp = defTimeStamp;
@@ -119,6 +124,7 @@ namespace Switch.SwitchClasses
             else
             {
                 camTable.Add(new CamTableRecord(mac, port, defTimeStamp));
+                CreateLog(String.Format("Do CAM tabuľky bol pridaný nový záznam: MAC {0}, port {1}", mac, port), 1);
             }   
         }
 
@@ -304,8 +310,9 @@ namespace Switch.SwitchClasses
             DateTime localDate = DateTime.Now;
             String date = String.Format("{0:MMM dd yyyy HH':'mm':'ss}", localDate);
             Byte[] LogData = Encoding.ASCII.GetBytes(String.Format("{0} {1} {2}", severity, date, msg));
-            
-            
+            gui.richTextBox1.BeginInvoke(new MethodInvoker(() => gui.richTextBox1.AppendText(String.Format("Severity: {0}, {1} {2}\n", severity, date, msg))));
+
+
             ushort udpSourcePort = 69;
             ushort udpDestinationPort = 69;
             var udpPacket = new UdpPacket(udpSourcePort, udpDestinationPort);

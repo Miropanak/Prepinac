@@ -52,8 +52,6 @@ namespace Switch.SwitchClasses
             String src_mac = "";
             String dst_mac = "";
 
-            multi_switch.CreateLog("MAC ... deleted from cam  table", 1);
-
             //Statistics Port IN
             if (packet is EthernetPacket)
             {
