@@ -19,3 +19,7 @@ D:\Mirko\Mirko\FIIT\ZS 2020_2021\PSIP_B\Zadanie1\Switch\Switch\bin\Debug\System.
 D:\Mirko\Mirko\FIIT\ZS 2020_2021\PSIP_B\Zadanie1\Switch\Switch\bin\Debug\System.Numerics.Vectors.xml
 D:\Mirko\Mirko\FIIT\ZS 2020_2021\PSIP_B\Zadanie1\Switch\Switch\bin\Debug\System.Runtime.CompilerServices.Unsafe.xml
 D:\Mirko\Mirko\FIIT\ZS 2020_2021\PSIP_B\Zadanie1\Switch\Switch\obj\Debug\Switch.csproj.CopyComplete
+D:\Mirko\Mirko\FIIT\ZS 2020_2021\PSIP_B\Zadanie1\Switch\Switch\bin\Debug\Switch.exe.manifest
+D:\Mirko\Mirko\FIIT\ZS 2020_2021\PSIP_B\Zadanie1\Switch\Switch\bin\Debug\Switch.application
+D:\Mirko\Mirko\FIIT\ZS 2020_2021\PSIP_B\Zadanie1\Switch\Switch\obj\Debug\Switch.exe.manifest
+D:\Mirko\Mirko\FIIT\ZS 2020_2021\PSIP_B\Zadanie1\Switch\Switch\obj\Debug\Switch.application

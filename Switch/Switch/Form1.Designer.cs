@@ -67,18 +67,18 @@
             this.listView_rules = new System.Windows.Forms.ListView();
             this.column_type = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
             this.column_port = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
+            this.column_inOut = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
             this.column_srcMAC = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
             this.column_srcIP = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
             this.column_dstMAC = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
             this.column_dstIP = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
+            this.column_protocol = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
             this.column_srcPort = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
             this.column_dstPort = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
             this.label5 = new System.Windows.Forms.Label();
             this.comboBox_inOut = new System.Windows.Forms.ComboBox();
             this.textBox_protocol = new System.Windows.Forms.TextBox();
             this.label_Protocol = new System.Windows.Forms.Label();
-            this.column_inOut = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
-            this.column_protocol = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
             ((System.ComponentModel.ISupportInitialize)(this.numericUpDown_timer)).BeginInit();
             this.SuspendLayout();
             // 
@@ -229,7 +229,7 @@
             // 
             // button_editRule
             // 
-            this.button_editRule.Location = new System.Drawing.Point(1100, 403);
+            this.button_editRule.Location = new System.Drawing.Point(1167, 399);
             this.button_editRule.Name = "button_editRule";
             this.button_editRule.Size = new System.Drawing.Size(151, 32);
             this.button_editRule.TabIndex = 20;
@@ -239,7 +239,7 @@
             // 
             // button_createRule
             // 
-            this.button_createRule.Location = new System.Drawing.Point(1098, 354);
+            this.button_createRule.Location = new System.Drawing.Point(1165, 350);
             this.button_createRule.Name = "button_createRule";
             this.button_createRule.Size = new System.Drawing.Size(151, 32);
             this.button_createRule.TabIndex = 21;
@@ -249,7 +249,7 @@
             // 
             // button_deleteRule
             // 
-            this.button_deleteRule.Location = new System.Drawing.Point(1100, 506);
+            this.button_deleteRule.Location = new System.Drawing.Point(1167, 502);
             this.button_deleteRule.Name = "button_deleteRule";
             this.button_deleteRule.Size = new System.Drawing.Size(149, 32);
             this.button_deleteRule.TabIndex = 22;
@@ -350,22 +350,22 @@
             this.label_srcPort.AutoSize = true;
             this.label_srcPort.Location = new System.Drawing.Point(922, 334);
             this.label_srcPort.Name = "label_srcPort";
-            this.label_srcPort.Size = new System.Drawing.Size(63, 17);
+            this.label_srcPort.Size = new System.Drawing.Size(135, 17);
             this.label_srcPort.TabIndex = 37;
-            this.label_srcPort.Text = "Src. Port";
+            this.label_srcPort.Text = "Src. Port/ICMP Type";
             this.label_srcPort.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
             // 
             // textBox_srcPort
             // 
             this.textBox_srcPort.Location = new System.Drawing.Point(925, 354);
             this.textBox_srcPort.Name = "textBox_srcPort";
-            this.textBox_srcPort.Size = new System.Drawing.Size(69, 22);
+            this.textBox_srcPort.Size = new System.Drawing.Size(127, 22);
             this.textBox_srcPort.TabIndex = 36;
             // 
             // label_dstPort
             // 
             this.label_dstPort.AutoSize = true;
-            this.label_dstPort.Location = new System.Drawing.Point(997, 334);
+            this.label_dstPort.Location = new System.Drawing.Point(1055, 334);
             this.label_dstPort.Name = "label_dstPort";
             this.label_dstPort.Size = new System.Drawing.Size(63, 17);
             this.label_dstPort.TabIndex = 39;
@@ -374,14 +374,14 @@
             // 
             // textBox_dstPort
             // 
-            this.textBox_dstPort.Location = new System.Drawing.Point(1000, 354);
+            this.textBox_dstPort.Location = new System.Drawing.Point(1058, 354);
             this.textBox_dstPort.Name = "textBox_dstPort";
             this.textBox_dstPort.Size = new System.Drawing.Size(69, 22);
             this.textBox_dstPort.TabIndex = 38;
             // 
             // button_selectRule
             // 
-            this.button_selectRule.Location = new System.Drawing.Point(1100, 451);
+            this.button_selectRule.Location = new System.Drawing.Point(1167, 447);
             this.button_selectRule.Name = "button_selectRule";
             this.button_selectRule.Size = new System.Drawing.Size(151, 32);
             this.button_selectRule.TabIndex = 40;
@@ -434,7 +434,7 @@
             this.listView_rules.Location = new System.Drawing.Point(38, 399);
             this.listView_rules.MultiSelect = false;
             this.listView_rules.Name = "listView_rules";
-            this.listView_rules.Size = new System.Drawing.Size(1042, 189);
+            this.listView_rules.Size = new System.Drawing.Size(1089, 189);
             this.listView_rules.TabIndex = 43;
             this.listView_rules.UseCompatibleStateImageBehavior = false;
             this.listView_rules.View = System.Windows.Forms.View.Details;
@@ -449,6 +449,12 @@
             this.column_port.Text = "Port";
             this.column_port.TextAlign = System.Windows.Forms.HorizontalAlignment.Center;
             this.column_port.Width = 48;
+            // 
+            // column_inOut
+            // 
+            this.column_inOut.Text = "in/out";
+            this.column_inOut.TextAlign = System.Windows.Forms.HorizontalAlignment.Center;
+            this.column_inOut.Width = 48;
             // 
             // column_srcMAC
             // 
@@ -474,10 +480,16 @@
             this.column_dstIP.TextAlign = System.Windows.Forms.HorizontalAlignment.Center;
             this.column_dstIP.Width = 108;
             // 
+            // column_protocol
+            // 
+            this.column_protocol.Text = "Protocol";
+            this.column_protocol.TextAlign = System.Windows.Forms.HorizontalAlignment.Center;
+            // 
             // column_srcPort
             // 
             this.column_srcPort.Text = "Src. Port";
             this.column_srcPort.TextAlign = System.Windows.Forms.HorizontalAlignment.Center;
+            this.column_srcPort.Width = 79;
             // 
             // column_dstPort
             // 
@@ -523,17 +535,6 @@
             this.label_Protocol.TabIndex = 48;
             this.label_Protocol.Text = "Protocol";
             this.label_Protocol.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
-            // 
-            // column_inOut
-            // 
-            this.column_inOut.Text = "in/out";
-            this.column_inOut.TextAlign = System.Windows.Forms.HorizontalAlignment.Center;
-            this.column_inOut.Width = 48;
-            // 
-            // column_protocol
-            // 
-            this.column_protocol.Text = "Protocol";
-            this.column_protocol.TextAlign = System.Windows.Forms.HorizontalAlignment.Center;
             // 
             // Form1
             // 

@@ -65,18 +65,14 @@ namespace Switch.SwitchClasses
 
                 if (multi_switch.FilterPacket("IN", device_port, src_mac, dst_mac, packet) == false)
                 {
-                    gui.richTextBox1.BeginInvoke(new MethodInvoker(() => gui.richTextBox1.AppendText(String.Format("Port {0} IN Nepreposielam\n\n", device_port))));
+                    //gui.richTextBox1.BeginInvoke(new MethodInvoker(() => gui.richTextBox1.AppendText(String.Format("Port {0} IN Nepreposielam\n\n", device_port))));
                     return;
                 }
-                gui.richTextBox1.BeginInvoke(new MethodInvoker(() => gui.richTextBox1.AppendText(String.Format("Port {0} IN Preposielam\n\n", device_port))));
+                //gui.richTextBox1.BeginInvoke(new MethodInvoker(() => gui.richTextBox1.AppendText(String.Format("Port {0} IN Preposielam\n\n", device_port))));
             }
-
-
-            
 
             //aktualizovanie CAM tabulky
             multi_switch.UpdateCAMTable(src_mac, device_port);
-
 
             //je dst port v tabulke?
             int src_port = multi_switch.CheckMACPort(src_mac);
@@ -95,10 +91,10 @@ namespace Switch.SwitchClasses
             {
                 if (multi_switch.FilterPacket("OUT", port, src_mac, dst_mac, packet) == false)
                 {
-                    gui.richTextBox1.BeginInvoke(new MethodInvoker(() => gui.richTextBox1.AppendText(String.Format("Port {0} OUT Nepreposielam\n\n", port))));
+                    //gui.richTextBox1.BeginInvoke(new MethodInvoker(() => gui.richTextBox1.AppendText(String.Format("Port {0} OUT Nepreposielam\n\n", port))));
                     return;
                 }
-                gui.richTextBox1.BeginInvoke(new MethodInvoker(() => gui.richTextBox1.AppendText(String.Format("Port {0} OUT Preposielam\n\n", port))));
+                //gui.richTextBox1.BeginInvoke(new MethodInvoker(() => gui.richTextBox1.AppendText(String.Format("Port {0} OUT Preposielam\n\n", port))));
                 UpdateStats(multi_switch.portInterfaces[port], packet, "OUT");
                 forward_device.SendPacket(packet);
             }
@@ -107,10 +103,10 @@ namespace Switch.SwitchClasses
             {
                 if (multi_switch.FilterPacket("OUT", dst_port, src_mac, dst_mac, packet) == false)
                 {
-                    gui.richTextBox1.BeginInvoke(new MethodInvoker(() => gui.richTextBox1.AppendText(String.Format("Port {0} OUT Nepreposielam\n\n",dst_port))));
+                    //gui.richTextBox1.BeginInvoke(new MethodInvoker(() => gui.richTextBox1.AppendText(String.Format("Port {0} OUT Nepreposielam\n\n",dst_port))));
                     return;
                 }
-                gui.richTextBox1.BeginInvoke(new MethodInvoker(() => gui.richTextBox1.AppendText(String.Format("Port {0} OUT Preposielam\n\n", dst_port))));
+                //gui.richTextBox1.BeginInvoke(new MethodInvoker(() => gui.richTextBox1.AppendText(String.Format("Port {0} OUT Preposielam\n\n", dst_port))));
                 UpdateStats(multi_switch.portInterfaces[dst_port], packet, "OUT");
                 forward_device.SendPacket(packet);   
             }

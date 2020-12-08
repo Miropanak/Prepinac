@@ -52,7 +52,6 @@ namespace Switch
             //Ethernet 3 MAC
             multi_switch.device[1] = (NpcapDevice)allDevices[checkedListBox_foundDevices.CheckedIndices[1]];
 
-            
             //vytvorenie instancii portov a priradenie do Multiswitchu
             multi_switch.portInterfaces[0] = new PortInterface(multi_switch.device[0], multi_switch.device[1], multi_switch, this, 0);
             multi_switch.portInterfaces[1] = new PortInterface(multi_switch.device[1], multi_switch.device[0], multi_switch, this, 1);
@@ -283,7 +282,7 @@ namespace Switch
                 listView_rules.SelectedIndices.Clear();
                 selected = false;
                 SetRuleInputs();
-                PrintRules();
+                //PrintRules();
             }
             catch (Exception except)
             {
@@ -330,7 +329,7 @@ namespace Switch
                     int index = listView_rules.Items.IndexOf(listView_rules.SelectedItems[0]);
                     listView_rules.Items.Remove(listView_rules.SelectedItems[0]);
                     multi_switch.rules.RemoveAt(index);
-                    PrintRules();
+                    //PrintRules();
                 }
                 catch (Exception except)
                 {
@@ -342,6 +341,7 @@ namespace Switch
                 MessageBox.Show("No Rules to Delete", "Confirm");
             }
         }
+
     }
 
 }
